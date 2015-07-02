@@ -45,12 +45,8 @@ public class Jackson1JsonValueObjectReaderWriter
     }
 
     @Override
-    public Map readMap(final InputStream entityStream) {
-        try {
-            return MAPPER.readValue(entityStream, Map.class);
-        } catch (IOException ex) {
-            throw new InternalServerErrorException();
-        }
+    public Map readMap(final InputStream entityStream) throws IOException {
+        return MAPPER.readValue(entityStream, Map.class);
     }
 
     @Override

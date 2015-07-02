@@ -14,9 +14,10 @@
 package com.crosstreelabs.jaxrs.api.versioned.readers;
 
 import com.crosstreelabs.jaxrs.api.versioned.AbstractValueObjectReaderWriter;
-import com.crosstreelabs.jaxrs.api.versioned.ValueObject;
 import com.crosstreelabs.jaxrs.api.versioned.ValueObjectRegistry;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.UserV1;
+import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.UserV2;
+import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.hierarchical.ResourceVO;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -40,7 +41,9 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 public class JsonValueObjectReaderWriterTest {
     
     protected static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
-    protected static final MediaType VO_TYPE = MediaType.valueOf(UserV1.TYPE_STR+".v1+json");
+    protected static final MediaType USER1_TYPE = MediaType.valueOf(UserV1.TYPE_STR+".v1+json");
+    protected static final MediaType USER2_TYPE = MediaType.valueOf(UserV2.TYPE_STR+".v2+json");
+    protected static final MediaType BOOK1_TYPE = MediaType.valueOf(UserV1.TYPE_STR+".v2+json");
     
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
@@ -57,19 +60,20 @@ public class JsonValueObjectReaderWriterTest {
             final AbstractValueObjectReaderWriter underTest) {
         this.underTest = underTest;
         ValueObjectRegistry.register(UserV1.class);
+        ValueObjectRegistry.register(UserV2.class);
     }
     
     @Test
     public void testIsReadable() {
         assertThat(underTest.isReadable(Object.class, Object.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_JSON_TYPE),
                 is(false));
-        assertThat(underTest.isReadable(Object.class, Object.class, EMPTY_ANNOTATIONS, VO_TYPE),
+        assertThat(underTest.isReadable(Object.class, Object.class, EMPTY_ANNOTATIONS, USER1_TYPE),
                 is(false));
         try {
             underTest.isReadable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_JSON_TYPE);
             fail("Test should have thrown NotSupportedException");
         } catch (NotSupportedException ex) {}
-        assertThat(underTest.isReadable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, VO_TYPE),
+        assertThat(underTest.isReadable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE),
                 is(true));
     }
 
@@ -77,29 +81,40 @@ public class JsonValueObjectReaderWriterTest {
     public void testIsWriteable() {
         assertThat(underTest.isWriteable(Object.class, Object.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_JSON_TYPE),
                 is(false));
-        assertThat(underTest.isWriteable(Object.class, Object.class, EMPTY_ANNOTATIONS, VO_TYPE),
+        assertThat(underTest.isWriteable(Object.class, Object.class, EMPTY_ANNOTATIONS, USER1_TYPE),
                 is(false));
         assertThat(underTest.isWriteable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_JSON_TYPE),
                 is(false));
-        assertThat(underTest.isWriteable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, VO_TYPE),
+        assertThat(underTest.isWriteable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE),
                 is(true));
     }
     
     @Test
     public void testReadFromNullInputStreamYieldsEmptyVO() throws Exception {
         Class<?> type = UserV1.class;
-        assertThat(underTest.readFrom((Class<Object>)type, UserV1.class, EMPTY_ANNOTATIONS, VO_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/missing.json")),
+        assertThat(underTest.readFrom((Class<Object>)type, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/missing.json")),
                 is(instanceOf(UserV1.class)));
     }
     
     @Test
     public void testReadFromRealInputStreamYieldsPopulatedVO() throws Exception {
         Class<?> type = UserV1.class;
-        Object result = underTest.readFrom((Class<Object>)type, UserV1.class, EMPTY_ANNOTATIONS, VO_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/user.v1.json"));
+        Object result = underTest.readFrom((Class<Object>)type, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/user.v1.json"));
         assertThat(result, is(instanceOf(UserV1.class)));
         assertThat(((UserV1)result).name, is(equalTo("Thomas")));
         assertThat(((UserV1)result).username, is(equalTo("thomas.wilson")));
         assertThat(((UserV1)result).email, is(equalTo("thomas.wilson@crosstreelabs.com")));
+    }
+    
+    @Test
+    public void ensureThatConsumerWorks() throws Exception {
+        Class<?> type = UserV2.class;
+        Object result = underTest.readFrom((Class<Object>)type, UserV2.class, EMPTY_ANNOTATIONS, USER2_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/user.v2.json"));
+        assertThat(result, is(instanceOf(UserV2.class)));
+        assertThat(((UserV2)result).getName(), is(equalTo("Thomas")));
+        assertThat(((UserV2)result).getUsername(), is(equalTo("thomas.wilson")));
+        assertThat(((UserV2)result).getEmail(), is(equalTo("thomas.wilson@crosstreelabs.com")));
+        assertThat(((UserV2)result).getAge(), is(equalTo(27)));
     }
     
     @Test
@@ -109,8 +124,19 @@ public class JsonValueObjectReaderWriterTest {
         user.username = "thomas.wilson";
         user.email = "thomas.wilson@crosstreelabs.com";
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        underTest.writeTo(user, UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, VO_TYPE, new MultivaluedHashMap<String, Object>(), baos);
+        underTest.writeTo(user, UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE, new MultivaluedHashMap<String, Object>(), baos);
         JSONAssert.assertEquals("{\"name\":\"Thomas\",\"username\":\"thomas.wilson\",\"email\":\"thomas.wilson@crosstreelabs.com\"}", baos.toString(), JSONCompareMode.STRICT);
+    }
+    
+    @Test
+    public void ensureHierarchicalResourceResolutionWorks() throws Exception {
+        Class<?> type = ResourceVO.class;
+        Object result = underTest.readFrom((Class<Object>)type, ResourceVO.class, EMPTY_ANNOTATIONS, BOOK1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/user.v2.json"));
+        assertThat(result, is(instanceOf(UserV2.class)));
+        assertThat(((UserV2)result).getName(), is(equalTo("Thomas")));
+        assertThat(((UserV2)result).getUsername(), is(equalTo("thomas.wilson")));
+        assertThat(((UserV2)result).getEmail(), is(equalTo("thomas.wilson@crosstreelabs.com")));
+        assertThat(((UserV2)result).getAge(), is(equalTo(27)));
     }
     
     protected InputStream getResource(final String resource) {
