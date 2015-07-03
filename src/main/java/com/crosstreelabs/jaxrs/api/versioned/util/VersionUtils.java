@@ -38,6 +38,6 @@ public class VersionUtils {
             return null;
         }
         
-        return version.contentType()[0]+"v"+version.value();
+        return version.contentType()[0]+".v"+version.value();
     }
 }

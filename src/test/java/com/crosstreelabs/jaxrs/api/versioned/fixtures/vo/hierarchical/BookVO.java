@@ -14,8 +14,12 @@
 package com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.hierarchical;
 
 import com.crosstreelabs.jaxrs.api.versioned.annotation.Version;
+import javax.ws.rs.core.MediaType;
 
-@Version(value = 1, contentType = {"application/vnd.crosstreelabs.book"})
+@Version(value = 1, contentType = {BookVO.TYPE_STR})
 public class BookVO extends ResourceVO {
+    public static final String TYPE_STR = "application/vnd.crosstreelabs.book";
+    public static final MediaType TYPE = MediaType.valueOf(TYPE_STR);
+    
     public String author;
 }
