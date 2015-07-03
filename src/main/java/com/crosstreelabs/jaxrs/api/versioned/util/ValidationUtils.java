@@ -11,8 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.crosstreelabs.jaxrs.api.versioned;
+package com.crosstreelabs.jaxrs.api.versioned.util;
 
+import com.crosstreelabs.jaxrs.api.versioned.ValueObject;
 import java.util.Collection;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -25,13 +26,14 @@ import javax.validation.ValidatorFactory;
  * check if javax.validation is available before attempting to load any related
  * classes.
  */
-public class ValidationHelper {
+public class ValidationUtils {
     public static void validate(final ValueObject vo) {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         Validator validator = factory.getValidator();
         Collection<ConstraintViolation<ValueObject>> violations = validator.validate(vo);
         if (!violations.isEmpty()) {
-            throw new ValidationException(violations.iterator().next().getMessage());
+            ConstraintViolation<ValueObject> violation = violations.iterator().next();
+            throw new ValidationException(violation.getPropertyPath().toString()+" "+violation.getMessage());
         }
     }
 }

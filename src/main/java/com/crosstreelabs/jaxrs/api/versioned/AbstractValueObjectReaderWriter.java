@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Map;
+import javax.validation.ValidationException;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.NotSupportedException;
@@ -32,6 +33,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The AbstractValueObjectReaderWriter enforces basic and required functionality
@@ -54,6 +57,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
  */
 public abstract class AbstractValueObjectReaderWriter
         implements MessageBodyReader<Object>, MessageBodyWriter<Object> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractValueObjectReaderWriter.class);
     public abstract Map readMap(InputStream entityStream) throws IOException;
     public abstract ValueObject readObject(InputStream entityStream, ValueObject vo)
             throws IOException;
@@ -194,12 +198,19 @@ public abstract class AbstractValueObjectReaderWriter
     
     protected void validate(final ValueObject vo) {
         try {
-            Class validationHelper = Class.forName("com.crosstreelabs.jaxrs.api.versioned.ValidationHelper");
+            Class validationHelper = Class.forName("com.crosstreelabs.jaxrs.api.versioned.util.ValidationUtils");
             Method method = validationHelper.getDeclaredMethod("validate", ValueObject.class);
             method.invoke(null, vo);
+        } catch (InvocationTargetException ex) {
+            if (ex.getCause() instanceof ValidationException) {
+                throw (ValidationException)ex.getCause();
+            }
+            LOGGER.debug("Unable to validate vo", ex);
         } catch (ClassNotFoundException | IllegalAccessException
-                | IllegalArgumentException | InvocationTargetException
-                | NoSuchMethodException | SecurityException ex) {}
+                | IllegalArgumentException | NoSuchMethodException
+                | SecurityException ex) {
+            LOGGER.warn("Unable to validate vo", ex);
+        }
     }
     
     protected boolean requiresValidation(final Annotation[] annotations) {
@@ -210,7 +221,9 @@ public abstract class AbstractValueObjectReaderWriter
                     return true;
                 }
             }
-        } catch (ClassNotFoundException ex) {} // Validation not available
+        } catch (ClassNotFoundException ex) {
+            LOGGER.warn("Validation library not present");
+        }
         return false;
     }
     

@@ -16,7 +16,6 @@ package com.crosstreelabs.testing.jersey;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -25,44 +24,54 @@ import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.rules.ExternalResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Jersey extends ExternalResource {
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(Jersey.class);
-    
-    private final AtomicReference<Client> client = new AtomicReference<>();
     private static final TestContainerFactory testContainerFactory = new InMemoryTestContainerFactory();
-    private final Class<?>[] classes;
+    private final Object[] objs;
     private DeploymentContext context;
     private TestContainer testContainer;
+    private Client client;
     
     public Client getClient() {
-        return client.get();
+        return client;
     }
 
-    public Jersey(Class<?>...classes) {
-        this.classes = classes;
+    public Jersey(Object...objs) {
+        this.objs = objs;
     }
     
     @Override
     protected void before() throws Throwable {
-        context = DeploymentContext.builder(new ResourceConfig(classes)).build();
+        ResourceConfig config = new ResourceConfig();
+        for (Object obj : objs) {
+            if (obj instanceof Class) {
+                config.register((Class<?>)obj);
+            } else {
+                config.register(obj);
+            }
+        }
+        
+        context = DeploymentContext.builder(config).build();
         testContainer = testContainerFactory.create(URI.create("http://localhost:"+getPort()+"/"), context);
         testContainer.start();
-        Client client = ClientBuilder.newClient(testContainer.getClientConfig());
-        for (Class<?> cls : classes) {
-            client.register(cls);
+        client = ClientBuilder.newClient(testContainer.getClientConfig());
+        for (Object obj : objs) {
+            if (obj instanceof Class) {
+                client.register((Class<?>)obj);
+            } else {
+                client.register(obj);
+            }
         }
-        this.client.set(client);
     }
 
     @Override
     protected void after() {
-        client.get().close();
-        client.set(null);
+        client.close();
+        client = null;
         testContainer.stop();
+        testContainer = null;
+        context = null;
     }
     
     private int getPort() {

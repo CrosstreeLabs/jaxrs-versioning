@@ -9,7 +9,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.Provider;
@@ -28,8 +27,8 @@ import org.codehaus.jackson.map.ObjectMapper;
  * requested structure, as determined by the accepted content type.
  */
 @Provider
-@Consumes({"*/*"})
-@Produces({"*/*"})
+@Consumes({"*/*+json"})
+@Produces({"*/*+json"})
 public class Jackson1JsonValueObjectReaderWriter
         extends AbstractValueObjectReaderWriter {
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -50,6 +49,12 @@ public class Jackson1JsonValueObjectReaderWriter
     }
 
     @Override
+    public ValueObject readObject(final InputStream entityStream,
+            final ValueObject vo) throws IOException {
+        return MAPPER.readValue(entityStream, vo.getClass());
+    }
+
+    @Override
     public boolean isWriteable(final Class<?> type,
             final Type genericType,
             final Annotation[] annotations,
@@ -62,12 +67,6 @@ public class Jackson1JsonValueObjectReaderWriter
     public void write(final ValueObject obj, final OutputStream entityStream)
             throws IOException {
         entityStream.write(MAPPER.writeValueAsBytes(obj));
-    }
-
-    @Override
-    public ValueObject readObject(final InputStream entityStream,
-            final ValueObject vo) throws IOException {
-        return MAPPER.readValue(entityStream, vo.getClass());
     }
     
 }

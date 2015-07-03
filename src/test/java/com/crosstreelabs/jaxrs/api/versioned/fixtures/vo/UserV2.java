@@ -17,6 +17,7 @@ import com.crosstreelabs.jaxrs.api.versioned.Consumer;
 import com.crosstreelabs.jaxrs.api.versioned.ValueObject;
 import com.crosstreelabs.jaxrs.api.versioned.annotation.Version;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.collections4.MapUtils;
 
@@ -25,8 +26,11 @@ public class UserV2 implements ValueObject, Consumer {
     public static final String TYPE_STR = "application/vnd.crosstreelabs.user";
     public static final MediaType TYPE = MediaType.valueOf(TYPE_STR);
 
+    @NotNull
     private String name;
+    @NotNull
     private String username;
+    @NotNull
     private String email;
     private int age;
 

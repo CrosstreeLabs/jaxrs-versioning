@@ -50,6 +50,12 @@ public class GsonJsonValueObjectReaderWriter
     }
 
     @Override
+    public ValueObject readObject(final InputStream entityStream,
+            final ValueObject vo) throws IOException {
+        return GSON.fromJson(new InputStreamReader(entityStream), vo.getClass());
+    }
+
+    @Override
     public boolean isWriteable(final Class<?> type,
             final Type genericType,
             final Annotation[] annotations,
@@ -62,12 +68,6 @@ public class GsonJsonValueObjectReaderWriter
     public void write(final ValueObject obj, final OutputStream entityStream)
             throws IOException {
         entityStream.write(GSON.toJson(obj).getBytes());
-    }
-
-    @Override
-    public ValueObject readObject(final InputStream entityStream,
-            final ValueObject vo) throws IOException {
-        return GSON.fromJson(new InputStreamReader(entityStream), vo.getClass());
     }
     
 }
