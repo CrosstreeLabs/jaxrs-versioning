@@ -13,7 +13,6 @@
  */
 package com.crosstreelabs.jaxrs.api.versioned.util;
 
-import com.crosstreelabs.jaxrs.api.versioned.ValueObject;
 import java.util.Collection;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -27,12 +26,14 @@ import javax.validation.ValidatorFactory;
  * classes.
  */
 public class ValidationUtils {
-    public static void validate(final ValueObject vo) {
+    private ValidationUtils() {}
+    
+    public static <T> void validate(final T vo) {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         Validator validator = factory.getValidator();
-        Collection<ConstraintViolation<ValueObject>> violations = validator.validate(vo);
+        Collection<ConstraintViolation<T>> violations = validator.validate(vo);
         if (!violations.isEmpty()) {
-            ConstraintViolation<ValueObject> violation = violations.iterator().next();
+            ConstraintViolation<T> violation = violations.iterator().next();
             throw new ValidationException(violation.getPropertyPath().toString()+" "+violation.getMessage());
         }
     }

@@ -43,6 +43,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
+import static org.mockito.Mockito.*;
 
 @RunWith(Parameterized.class)
 public class JsonValueObjectReaderWriterTest {
@@ -152,12 +153,8 @@ public class JsonValueObjectReaderWriterTest {
     
     @Test(expected = ValidationException.class)
     public void testWritingValidation() throws Exception {
-        Valid v = new Valid(){
-            @Override
-            public Class<? extends Annotation> annotationType() {
-                return Valid.class;
-            }
-        };
+        Valid v = mock(Valid.class);
+        doReturn(Valid.class).when(v).annotationType();
         ByteArrayOutputStream entityStream = new ByteArrayOutputStream();
         MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<>();
         underTest.writeTo(new UserV1(), UserV1.class, UserV1.class, new Annotation[]{v}, USER1_TYPE, headers, entityStream);

@@ -14,6 +14,7 @@
 package com.crosstreelabs.jaxrs.api.versioned;
 
 import com.crosstreelabs.jaxrs.api.versioned.annotation.Version;
+import com.crosstreelabs.jaxrs.api.versioned.util.AnnotationUtils;
 import com.crosstreelabs.jaxrs.api.versioned.util.VersionUtils;
 import java.io.IOException;
 import java.io.InputStream;
@@ -199,7 +200,7 @@ public abstract class AbstractValueObjectReaderWriter
     protected void validate(final ValueObject vo) {
         try {
             Class validationHelper = Class.forName("com.crosstreelabs.jaxrs.api.versioned.util.ValidationUtils");
-            Method method = validationHelper.getDeclaredMethod("validate", ValueObject.class);
+            Method method = validationHelper.getDeclaredMethod("validate", Object.class);
             method.invoke(null, vo);
         } catch (InvocationTargetException ex) {
             if (ex.getCause() instanceof ValidationException) {
@@ -216,11 +217,7 @@ public abstract class AbstractValueObjectReaderWriter
     protected boolean requiresValidation(final Annotation[] annotations) {
         try {
             Class valid = Class.forName("javax.validation.Valid");
-            for (Annotation ann : annotations) {
-                if (ann.annotationType().equals(valid)) {
-                    return true;
-                }
-            }
+            return AnnotationUtils.find(valid, annotations) != null;
         } catch (ClassNotFoundException ex) {
             LOGGER.warn("Validation library not present");
         }
