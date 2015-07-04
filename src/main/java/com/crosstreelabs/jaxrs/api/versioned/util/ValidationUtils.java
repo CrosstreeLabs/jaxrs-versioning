@@ -26,8 +26,6 @@ import javax.validation.ValidatorFactory;
  * classes.
  */
 public class ValidationUtils {
-    private ValidationUtils() {}
-    
     public static <T> void validate(final T vo) {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         Validator validator = factory.getValidator();

@@ -16,8 +16,6 @@ package com.crosstreelabs.jaxrs.api.versioned.util;
 import java.lang.annotation.Annotation;
 
 public class AnnotationUtils {
-    private AnnotationUtils() {}
-    
     public static <T extends Annotation> T find(final Class<T> needle,
             final Annotation[] haystack) {
         if (haystack == null) {
