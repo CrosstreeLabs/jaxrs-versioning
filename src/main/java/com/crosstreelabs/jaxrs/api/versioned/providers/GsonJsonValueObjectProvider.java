@@ -1,4 +1,4 @@
-package com.crosstreelabs.jaxrs.api.versioned.readers;
+package com.crosstreelabs.jaxrs.api.versioned.providers;
 
 import com.crosstreelabs.jaxrs.api.versioned.AbstractValueObjectReaderWriter;
 import com.crosstreelabs.jaxrs.api.versioned.ValueObject;
@@ -30,7 +30,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 @Consumes({"*/*+json"})
 @Produces({"*/*+json"})
-public class GsonJsonValueObjectReaderWriter
+public class GsonJsonValueObjectProvider
         extends AbstractValueObjectReaderWriter {
     private static final Gson GSON = new Gson();
     

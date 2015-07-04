@@ -11,8 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.crosstreelabs.jaxrs.api.versioned.readers;
+package com.crosstreelabs.jaxrs.api.versioned.providers;
 
+import com.crosstreelabs.jaxrs.api.versioned.providers.Jackson1JsonValueObjectProvider;
+import com.crosstreelabs.jaxrs.api.versioned.providers.GsonJsonValueObjectProvider;
+import com.crosstreelabs.jaxrs.api.versioned.providers.Jackson2JsonValueObjectProvider;
 import com.crosstreelabs.jaxrs.api.versioned.ValueObjectRegistry;
 import com.crosstreelabs.jaxrs.api.versioned.exception.ValidationExceptionMapper;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.UserV1;
@@ -39,7 +42,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class JsonValueObjectReaderWriterITTest {
+public class JsonValueObjectProviderITTest {
     
     @Rule
     public final Jersey jersey;
@@ -57,7 +60,7 @@ public class JsonValueObjectReaderWriterITTest {
         ValueObjectRegistry.register(UserV1.class);
     }
     
-    public JsonValueObjectReaderWriterITTest(final Class<?> cls) throws Exception {
+    public JsonValueObjectProviderITTest(final Class<?> cls) throws Exception {
         jersey = new Jersey(cls, ValidationExceptionMapper.class, JacksonJsonProvider.class, UserResource.class);
     }
     
@@ -105,13 +108,13 @@ public class JsonValueObjectReaderWriterITTest {
     @Provider
     @Priority(Integer.MAX_VALUE)
     public static class Jackson1JsonValueObjectReaderWriterTestable
-            extends Jackson1JsonValueObjectReaderWriter {}
+            extends Jackson1JsonValueObjectProvider {}
     @Provider
     @Priority(Integer.MAX_VALUE)
     public static class Jackson2JsonValueObjectReaderWriterTestable
-            extends Jackson2JsonValueObjectReaderWriter {}
+            extends Jackson2JsonValueObjectProvider {}
     @Provider
     @Priority(Integer.MAX_VALUE)
     public static class GsonJsonValueObjectReaderWriterTestable
-            extends GsonJsonValueObjectReaderWriter {}
+            extends GsonJsonValueObjectProvider {}
 }

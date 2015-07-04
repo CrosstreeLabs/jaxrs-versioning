@@ -1,4 +1,4 @@
-package com.crosstreelabs.jaxrs.api.versioned.readers;
+package com.crosstreelabs.jaxrs.api.versioned.providers;
 
 import com.crosstreelabs.jaxrs.api.versioned.AbstractValueObjectReaderWriter;
 import com.crosstreelabs.jaxrs.api.versioned.ValueObject;
@@ -29,7 +29,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 @Consumes({"*/*+json"})
 @Produces({"*/*+json"})
-public class Jackson2JsonValueObjectReaderWriter
+public class Jackson2JsonValueObjectProvider
         extends AbstractValueObjectReaderWriter {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     

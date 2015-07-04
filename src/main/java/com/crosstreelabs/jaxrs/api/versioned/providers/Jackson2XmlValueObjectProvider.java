@@ -1,4 +1,4 @@
-package com.crosstreelabs.jaxrs.api.versioned.readers;
+package com.crosstreelabs.jaxrs.api.versioned.providers;
 
 import com.crosstreelabs.jaxrs.api.versioned.AbstractValueObjectReaderWriter;
 import com.crosstreelabs.jaxrs.api.versioned.ValueObject;
@@ -31,7 +31,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 @Consumes({"*/*+xml"})
 @Produces({"*/*+xml"})
-public class Jackson2XmlValueObjectReaderWriter extends AbstractValueObjectReaderWriter {
+public class Jackson2XmlValueObjectProvider extends AbstractValueObjectReaderWriter {
     private static final ObjectMapper MAPPER = new XmlMapper();
     
     //~ AbstractValueObjectReaderWriter impl ~~~~~~~~~~~~~~~

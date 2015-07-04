@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.crosstreelabs.jaxrs.api.versioned.readers;
+package com.crosstreelabs.jaxrs.api.versioned.providers;
 
 import com.crosstreelabs.jaxrs.api.versioned.util.AnnotationUtils;
 import java.io.ByteArrayOutputStream;
@@ -45,7 +45,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 @Produces("application/x-www-form-urlencoded")
 @Consumes("application/x-www-form-urlencoded")
-public class FormUrlEncodedReaderWriter
+public class FormUrlEncodedProvider
         implements MessageBodyReader<MultivaluedMap>,
                 MessageBodyWriter<MultivaluedMap> {
     @Override

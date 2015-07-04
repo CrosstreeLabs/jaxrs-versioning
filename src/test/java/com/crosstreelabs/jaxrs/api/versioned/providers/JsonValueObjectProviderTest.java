@@ -11,8 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.crosstreelabs.jaxrs.api.versioned.readers;
+package com.crosstreelabs.jaxrs.api.versioned.providers;
 
+import com.crosstreelabs.jaxrs.api.versioned.providers.Jackson1JsonValueObjectProvider;
+import com.crosstreelabs.jaxrs.api.versioned.providers.GsonJsonValueObjectProvider;
+import com.crosstreelabs.jaxrs.api.versioned.providers.Jackson2JsonValueObjectProvider;
 import com.crosstreelabs.jaxrs.api.versioned.AbstractValueObjectReaderWriter;
 import com.crosstreelabs.jaxrs.api.versioned.ValueObject;
 import com.crosstreelabs.jaxrs.api.versioned.ValueObjectRegistry;
@@ -46,7 +49,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import static org.mockito.Mockito.*;
 
 @RunWith(Parameterized.class)
-public class JsonValueObjectReaderWriterTest {
+public class JsonValueObjectProviderTest {
     
     protected static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
     protected static final MediaType USER1_TYPE = MediaType.valueOf(UserV1.TYPE_STR+".v1+json");
@@ -56,15 +59,15 @@ public class JsonValueObjectReaderWriterTest {
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-            { new Jackson1JsonValueObjectReaderWriter() },
-            { new Jackson2JsonValueObjectReaderWriter() },
-            { new GsonJsonValueObjectReaderWriter() }
+            { new Jackson1JsonValueObjectProvider() },
+            { new Jackson2JsonValueObjectProvider() },
+            { new GsonJsonValueObjectProvider() }
         });
     }
     
     private final AbstractValueObjectReaderWriter underTest;
     
-    public JsonValueObjectReaderWriterTest(
+    public JsonValueObjectProviderTest(
             final AbstractValueObjectReaderWriter underTest) {
         this.underTest = underTest;
         ValueObjectRegistry.register(UserV1.class);
