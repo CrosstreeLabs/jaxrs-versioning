@@ -14,6 +14,7 @@
 package com.crosstreelabs.jaxrs.api.versioned.providers;
 
 import com.crosstreelabs.jaxrs.api.versioned.util.AnnotationUtils;
+import com.crosstreelabs.jaxrs.api.versioned.util.StreamUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,6 +38,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This provider is pilfered largely from
@@ -45,7 +48,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 @Produces("application/x-www-form-urlencoded")
 @Consumes("application/x-www-form-urlencoded")
-public class FormUrlEncodedProvider
+public class MultivaluedMapFormUrlEncodedProvider
         implements MessageBodyReader<MultivaluedMap>,
                 MessageBodyWriter<MultivaluedMap> {
     @Override
@@ -53,7 +56,8 @@ public class FormUrlEncodedProvider
             final Type genericType,
             final Annotation[] annotations,
             final MediaType mediaType) {
-        return MultivaluedMap.class.equals(type);
+        return MultivaluedMap.class.equals(type)
+                && MediaType.APPLICATION_FORM_URLENCODED_TYPE.isCompatible(mediaType);
     }
 
     @Override
@@ -67,11 +71,11 @@ public class FormUrlEncodedProvider
         if (isContentLengthZero(httpHeaders)) {
             return new MultivaluedHashMap<>();
         }
-        boolean encoded = AnnotationUtils.find(Encoded.class, annotations) != null;
-        if (encoded) {
-            return parseForm(entityStream);
+        MultivaluedMap result = parseForm(entityStream);
+        if (AnnotationUtils.find(Encoded.class, annotations) == null) {
+            return decode(result);
         }
-        return decode(parseForm(entityStream));
+        return result;
     }
 
     @Override
@@ -79,7 +83,8 @@ public class FormUrlEncodedProvider
             final Type genericType,
             final Annotation[] annotations,
             final MediaType mediaType) {
-        return MultivaluedMap.class.isAssignableFrom(type);
+        return MultivaluedMap.class.isAssignableFrom(type)
+                && MediaType.APPLICATION_FORM_URLENCODED_TYPE.isCompatible(mediaType);
     }
 
     @Override
@@ -129,13 +134,7 @@ public class FormUrlEncodedProvider
     protected static MultivaluedMap<String, String> parseForm(
             final InputStream entityStream)
             throws IOException {
-        // Read the entity stream into a string
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buf = new byte[128];
-        while (entityStream.read(buf) > -1) {
-            baos.write(buf);
-        }
-        String str = baos.toString();
+        String str = StreamUtils.toString(entityStream);
 
         MultivaluedMap<String, String> result = new MultivaluedHashMap<>();
         if (str == null || str.isEmpty()) {
