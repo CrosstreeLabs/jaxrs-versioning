@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.Encoded;
@@ -44,9 +45,14 @@ public class HierarchicalMapFormUrlEncodedProviderTest {
             = new HierarchicalMapFormUrlEncodedProvider();
     protected static final Gson GSON = new Gson();
     protected static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
-    protected static final Annotation[] ENCODED = new Annotation[]{
-            mock(Encoded.class)
-    };
+    protected static final Annotation[] ENCODED;
+    static {
+        Encoded e = mock(Encoded.class);
+        doReturn(Encoded.class).when(e).annotationType();
+        ENCODED = new Annotation[]{
+                e
+        };
+    }
 
     @Test
     public void testIsReadable() {
@@ -62,10 +68,20 @@ public class HierarchicalMapFormUrlEncodedProviderTest {
 
     @Test
     public void testReadFrom() throws Exception {
-        Map expected = GSON.fromJson("{\"a\":\"1\",\"b\":{\"0\":\"2\",\"a\":\"3\",\"1\":\"4\"},\"c\":{\"a\":{\"b\":\"5\"}}}", Map.class);
+        Map expected = GSON.fromJson("{\"a\":\"1\",\"b\":{\"0\":\"2\",\"a\":\"3\",\"1\":\"4\"},\"c\":{\"a\":{\"b\":\"5\"}},\"d\":\"\"}", Map.class);
         
-        assertThat(UNDER_TEST.readFrom(Map.class, Map.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedStringMap(), qs("a=1&b[]=2&b[a]=3&b[]=4&c.a[b]=5")),
+        assertThat(UNDER_TEST.readFrom(Map.class, Map.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedStringMap(), qs("a=1&b[]=2&b[a]=3&b[]=4&c.a[b]=5&d")),
                 is(expected));
+        assertThat(UNDER_TEST.readFrom(Map.class, Map.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedStringMap(), qs("")),
+                is(Collections.EMPTY_MAP));
+    }
+    
+    @Test
+    public void testReadEncoding() throws Exception {
+        Map<String, Object> result = UNDER_TEST.readFrom(Map.class, Map.class, ENCODED, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedHashMap<String, String>(), qs("a%c5%92=%c5%a0"));
+        assertThat(result, is(Collections.singletonMap("a%c5%92", (Object)"%c5%a0")));
+        result = UNDER_TEST.readFrom(Map.class, Map.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedHashMap<String, String>(), qs("a%c5%92=%c5%a0"));
+        assertThat(result, is(Collections.singletonMap("aŒ", (Object)"Š")));
     }
 
     @Test
@@ -78,6 +94,12 @@ public class HierarchicalMapFormUrlEncodedProviderTest {
                 is(true));
         assertThat(UNDER_TEST.isWriteable(MultivaluedMap.class, MultivaluedMap.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE),
                 is(true));
+    }
+    
+    @Test
+    public void testGetSize() {
+        assertThat(UNDER_TEST.getSize(null, null, null, ENCODED, MediaType.WILDCARD_TYPE),
+                is(notNullValue()));
     }
 
     @Test

@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.Encoded;
@@ -29,18 +30,25 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import org.junit.Test;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 public class MultivaluedMapFormUrlEncodedProviderTest {
     protected static final MultivaluedMapFormUrlEncodedProvider UNDER_TEST
             = new MultivaluedMapFormUrlEncodedProvider();
     protected static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
-    protected static final Annotation[] ENCODED = new Annotation[]{
-            mock(Encoded.class)
-    };
+    protected static final Annotation[] ENCODED;
+    static {
+        Encoded e = mock(Encoded.class);
+        doReturn(Encoded.class).when(e).annotationType();
+        ENCODED = new Annotation[]{
+                e
+        };
+    }
     
     @Test
     public void testIsReadable() {
@@ -60,9 +68,20 @@ public class MultivaluedMapFormUrlEncodedProviderTest {
         expected.add("a", "1");
         expected.addAll("b", "2", "3", "4");
         expected.add("c", "5");
+        expected.add("d", "");
         
-        assertThat(UNDER_TEST.readFrom(MultivaluedMap.class, MultivaluedMap.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedStringMap(), qs("a=1&b=2&b=3&b=4&c=5")),
+        assertThat(UNDER_TEST.readFrom(MultivaluedMap.class, MultivaluedMap.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedStringMap(), qs("a=1&b=2&b=3&b=4&c=5&d")),
                 is(expected));
+        assertThat(UNDER_TEST.readFrom(MultivaluedMap.class, MultivaluedMap.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedStringMap(), qs("")),
+                is(Collections.EMPTY_MAP));
+    }
+    
+    @Test
+    public void testReadEncoding() throws Exception {
+        MultivaluedMap<String, String> result = UNDER_TEST.readFrom(MultivaluedMap.class, MultivaluedMap.class, ENCODED, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedHashMap<String, String>(), qs("a%c5%92=%c5%a0"));
+        assertThat(result.getFirst("a%c5%92"), is(equalTo("%c5%a0")));
+        result = UNDER_TEST.readFrom(MultivaluedMap.class, MultivaluedMap.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedHashMap<String, String>(), qs("a%c5%92=%c5%a0"));
+        assertThat(result.getFirst("aŒ"), is(equalTo("Š")));
     }
 
     @Test
@@ -76,6 +95,12 @@ public class MultivaluedMapFormUrlEncodedProviderTest {
         assertThat(UNDER_TEST.isWriteable(MultivaluedMap.class, MultivaluedMap.class, EMPTY_ANNOTATIONS, MediaType.MULTIPART_FORM_DATA_TYPE),
                 is(false));
     }
+    
+    @Test
+    public void testGetSize() {
+        assertThat(UNDER_TEST.getSize(null, null, null, ENCODED, MediaType.WILDCARD_TYPE),
+                is(notNullValue()));
+    }
 
     @Test
     public void testWriteTo() throws Exception {
@@ -83,6 +108,7 @@ public class MultivaluedMapFormUrlEncodedProviderTest {
         map.add("a", "1");
         map.addAll("b", "2", "3", "4");
         map.add("c", "5");
+        map.add("d", "");
         
         assertThat(write(map, MultivaluedMap.class, MultivaluedMap.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedHashMap<String, Object>()),
                 allOf(

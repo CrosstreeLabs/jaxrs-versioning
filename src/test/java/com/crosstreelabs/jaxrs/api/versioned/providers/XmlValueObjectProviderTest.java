@@ -23,23 +23,29 @@ import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.hierarchical.BookVO;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.hierarchical.ResourceVO;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.ValidationException;
-import javax.ws.rs.Encoded;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
+import org.custommonkey.xmlunit.Diff;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import static org.mockito.Mockito.doReturn;
@@ -48,52 +54,40 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 @RunWith(Parameterized.class)
-public class JsonValueObjectProviderTest {
+public class XmlValueObjectProviderTest {
     
     protected static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
-    protected static final Annotation[] ENCODED;
-    protected static final MediaType USER1_TYPE = MediaType.valueOf(UserV1.TYPE_STR+".v1+json");
-    protected static final MediaType USER2_TYPE = MediaType.valueOf(UserV2.TYPE_STR+".v2+json");
-    protected static final MediaType BOOK1_TYPE = MediaType.valueOf(BookVO.TYPE_STR+".v1+json");
-    
-    static {
-        Encoded e = mock(Encoded.class);
-        doReturn(Encoded.class).when(e).annotationType();
-        ENCODED = new Annotation[]{
-            e
-        };
-        
-        ValueObjectRegistry.register(UserV1.class);
-        ValueObjectRegistry.register(UserV2.class);
-        ValueObjectRegistry.register(BookVO.class);
-    }
+    protected static final MediaType USER1_TYPE = MediaType.valueOf(UserV1.TYPE_STR+".v1+xml");
+    protected static final MediaType USER2_TYPE = MediaType.valueOf(UserV2.TYPE_STR+".v2+xml");
+    protected static final MediaType BOOK1_TYPE = MediaType.valueOf(BookVO.TYPE_STR+".v1+xml");
     
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-            { new Jackson1JsonValueObjectProvider() },
-            { new Jackson2JsonValueObjectProvider() },
-            { new GsonJsonValueObjectProvider() }
+            { new Jackson2XmlValueObjectProvider() }
         });
     }
     
     private final AbstractValueObjectReaderWriter underTest;
     
-    public JsonValueObjectProviderTest(
+    public XmlValueObjectProviderTest(
             final AbstractValueObjectReaderWriter underTest) {
         this.underTest = underTest;
+        ValueObjectRegistry.register(UserV1.class);
+        ValueObjectRegistry.register(UserV2.class);
+        ValueObjectRegistry.register(BookVO.class);
     }
     
     @Test
     public void testIsReadable() {
-        assertThat(underTest.isReadable(Object.class, Object.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_JSON_TYPE),
+        assertThat(underTest.isReadable(Object.class, Object.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_XML_TYPE),
                 is(false));
         assertThat(underTest.isReadable(Object.class, Object.class, EMPTY_ANNOTATIONS, USER1_TYPE),
                 is(false));
         assertThat(underTest.isReadable(ResourceVO.class, ResourceVO.class, EMPTY_ANNOTATIONS, BOOK1_TYPE),
                 is(true));
         try {
-            underTest.isReadable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_JSON_TYPE);
+            underTest.isReadable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_XML_TYPE);
             fail("Test should have thrown NotSupportedException");
         } catch (NotSupportedException ex) {}
         assertThat(underTest.isReadable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE),
@@ -102,11 +96,11 @@ public class JsonValueObjectProviderTest {
 
     @Test
     public void testIsWriteable() {
-        assertThat(underTest.isWriteable(Object.class, Object.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_JSON_TYPE),
+        assertThat(underTest.isWriteable(Object.class, Object.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_XML_TYPE),
                 is(false));
         assertThat(underTest.isWriteable(Object.class, Object.class, EMPTY_ANNOTATIONS, USER1_TYPE),
                 is(false));
-        assertThat(underTest.isWriteable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_JSON_TYPE),
+        assertThat(underTest.isWriteable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_XML_TYPE),
                 is(false));
         assertThat(underTest.isWriteable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE),
                 is(true));
@@ -117,44 +111,30 @@ public class JsonValueObjectProviderTest {
     @Test
     public void testReadFromNullInputStreamYieldsEmptyVO() throws Exception {
         Class<?> type = UserV1.class;
-        assertThat(underTest.readFrom((Class<Object>)type, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/missing.json")),
+        assertThat(underTest.readFrom((Class<Object>)type, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/missing.xml")),
                 is(instanceOf(UserV1.class)));
     }
     
     @Test
     public void testReadFromRealInputStreamYieldsPopulatedVO() throws Exception {
         Class<?> type = UserV1.class;
-        Object result = underTest.readFrom((Class<Object>)type, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/user.v1.json"));
+        Object result = underTest.readFrom((Class<Object>)type, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/user.v1.xml"));
         assertThat(result, is(instanceOf(UserV1.class)));
         assertThat(((UserV1)result).name, is(equalTo("Thomas")));
         assertThat(((UserV1)result).username, is(equalTo("thomas.wilson")));
         assertThat(((UserV1)result).email, is(equalTo("thomas.wilson@crosstreelabs.com")));
     }
     
-    @Test(expected = NotSupportedException.class)
-    public void testReadFromInvalidContentTypeThrowsException() throws Exception {
-        underTest.readFrom(Object.class, Object.class, ENCODED, MediaType.APPLICATION_JSON_TYPE, null, null);
-    }
-    
     @Test
     public void ensureThatConsumerWorks() throws Exception {
         Class<?> type = UserV2.class;
-        Object result = underTest.readFrom((Class<Object>)type, UserV2.class, EMPTY_ANNOTATIONS, USER2_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/user.v2.json"));
+        Object result = underTest.readFrom((Class<Object>)type, UserV2.class, EMPTY_ANNOTATIONS, USER2_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/user.v2.xml"));
         assertThat(result, is(instanceOf(UserV2.class)));
         assertThat(((UserV2)result).getName(), is(equalTo("Thomas")));
         assertThat(((UserV2)result).getUsername(), is(equalTo("thomas.wilson")));
         assertThat(((UserV2)result).getEmail(), is(equalTo("thomas.wilson@crosstreelabs.com")));
         assertThat(((UserV2)result).getAge(), is(equalTo(27)));
     }
-    
-//    @Test
-//    public void ensureHandlesEncodingOnRead() throws Exception {
-//        Object result = underTest.readFrom((Class)UserV1.class, UserV1.class, ENCODED, USER1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/user.v1.specialchars.json"));
-//        assertThat(result, is(instanceOf(UserV1.class)));
-//        assertThat(((UserV1)result).name, is(equalTo("Thoma%8A")));
-//        assertThat(((UserV1)result).username, is(equalTo("thomas.wilson")));
-//        assertThat(((UserV1)result).email, is(equalTo("thomas.wilson@crosstreelabs.com")));
-//    }
     
     @Test
     public void testWritingNullResultsInEmptyJsonObject() throws Exception {
@@ -164,7 +144,9 @@ public class JsonValueObjectProviderTest {
         user.email = "thomas.wilson@crosstreelabs.com";
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         underTest.writeTo(user, UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE, new MultivaluedHashMap<String, Object>(), baos);
-        JSONAssert.assertEquals("{\"name\":\"Thomas\",\"username\":\"thomas.wilson\",\"email\":\"thomas.wilson@crosstreelabs.com\"}", baos.toString(), JSONCompareMode.STRICT);
+        String expected = "<xml><name>Thomas</name><username>thomas.wilson</username><email>thomas.wilson@crosstreelabs.com</email></xml>";
+        Diff diff = new Diff(expected, baos.toString());
+        assertTrue(diff.similar());
     }
     
     @Test(expected = InternalServerErrorException.class)
@@ -189,7 +171,7 @@ public class JsonValueObjectProviderTest {
     @Test
     public void ensureHierarchicalResourceResolutionWorks() throws Exception {
         Class<?> type = ResourceVO.class;
-        Object result = underTest.readFrom((Class<Object>)type, ResourceVO.class, EMPTY_ANNOTATIONS, BOOK1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/book.v1.json"));
+        Object result = underTest.readFrom((Class<Object>)type, ResourceVO.class, EMPTY_ANNOTATIONS, BOOK1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/book.v1.xml"));
         assertThat(result, is(instanceOf(BookVO.class)));
         assertThat(((BookVO)result).title, is(equalTo("The Cat In The Hat")));
         assertThat(((BookVO)result).description, is(equalTo("The Cat in the Hat is a children's book.")));

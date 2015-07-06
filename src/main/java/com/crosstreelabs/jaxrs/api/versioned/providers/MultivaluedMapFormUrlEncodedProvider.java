@@ -14,16 +14,15 @@
 package com.crosstreelabs.jaxrs.api.versioned.providers;
 
 import com.crosstreelabs.jaxrs.api.versioned.util.AnnotationUtils;
+import com.crosstreelabs.jaxrs.api.versioned.util.EncodingUtils;
 import com.crosstreelabs.jaxrs.api.versioned.util.StreamUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -31,15 +30,12 @@ import java.util.Map;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This provider is pilfered largely from
@@ -51,6 +47,7 @@ import org.slf4j.LoggerFactory;
 public class MultivaluedMapFormUrlEncodedProvider
         implements MessageBodyReader<MultivaluedMap>,
                 MessageBodyWriter<MultivaluedMap> {
+    
     @Override
     public boolean isReadable(final Class<?> type,
             final Type genericType,
@@ -68,12 +65,9 @@ public class MultivaluedMapFormUrlEncodedProvider
             final MediaType mediaType,
             final MultivaluedMap<String, String> httpHeaders,
             final InputStream entityStream) throws IOException {
-        if (isContentLengthZero(httpHeaders)) {
-            return new MultivaluedHashMap<>();
-        }
         MultivaluedMap result = parseForm(entityStream);
         if (AnnotationUtils.find(Encoded.class, annotations) == null) {
-            return decode(result);
+            return (MultivaluedMap)EncodingUtils.decode(result, StandardCharsets.UTF_8);
         }
         return result;
     }
@@ -152,32 +146,5 @@ public class MultivaluedMapFormUrlEncodedProvider
             }
         }
         return result;
-    }
-    protected static boolean isContentLengthZero(final MultivaluedMap httpHeaders) {
-        if (httpHeaders == null) {
-            return false;
-        }
-        String contentLength = (String)httpHeaders.getFirst(HttpHeaders.CONTENT_LENGTH);
-        if (contentLength != null) {
-            long length = Long.parseLong(contentLength);
-            if (length == 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-    protected static MultivaluedMap<String, String> decode(MultivaluedMap<String, String> map) {
-        MultivaluedMap<String, String> decoded = new MultivaluedHashMap<>();
-        for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-            List<String> values = entry.getValue();
-            for (String value : values) {
-                try {
-                    decoded.add(URLDecoder.decode(entry.getKey(), StandardCharsets.UTF_8.name()), URLDecoder.decode(value, StandardCharsets.UTF_8.name()));
-                } catch (UnsupportedEncodingException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        }
-        return decoded;
     }
 }

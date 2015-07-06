@@ -14,6 +14,7 @@
 package com.crosstreelabs.jaxrs.api.versioned.util;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,8 +33,7 @@ public class QueryStringUtils {
         final String params[] = queryString.split("&");
         for (String param : params) {
             final String[] parts = param.split("=", 2);
-            final String key = java.net.URLDecoder.decode(parts[0], "UTF-8");
-            final String[] path = keyToPath(key);
+            final String[] path = keyToPath(parts[0]);
             final String value = parts.length > 1 ? parts[1] : "";
             
             // Now iterate over the key path until we're done
@@ -80,29 +80,29 @@ public class QueryStringUtils {
         return result;
     }
     
-    public static String toQueryString(final Map<?,?> map, final boolean encoded) {
+    public static String toQueryString(final Map<?,?> map, final boolean encoded, final Charset charset) {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         for (Map.Entry entry : map.entrySet()) {
             String encodedName = (String)entry.getKey();
             if (!encoded) {
-                encodedName = EncodingUtils.encode(encodedName);
+                encodedName = EncodingUtils.encode(encodedName, charset);
             }
             
             if (entry.getValue() instanceof Map) {
-                for (String str : toSubQueryString((Map)entry.getValue(), encoded)) {
+                for (String str : toSubQueryString((Map)entry.getValue(), encoded, charset)) {
                     sb.append("&").append(encodedName).append(str);
                     first = false;
                 }
             } else if (entry.getValue() instanceof List) {
-                for (String str : toQueryString((List)entry.getValue(), encoded)) {
+                for (String str : toQueryString((List)entry.getValue(), encoded, charset)) {
                     sb.append("&").append(encodedName).append(str);
                     first = false;
                 }
             } else {
                 String value = (String)entry.getValue();
                 if (!encoded) {
-                    value = EncodingUtils.encode(entry.getValue().toString());
+                    value = EncodingUtils.encode(entry.getValue().toString(), charset);
                 }
                 sb.append("&").append(encodedName).append("=").append(value);
                 first = false;
@@ -111,34 +111,34 @@ public class QueryStringUtils {
 
         return sb.toString();
     }
-    protected static List<String> toSubQueryString(final Map<?,?> map, final boolean encoded) {
+    protected static List<String> toSubQueryString(final Map<?,?> map, final boolean encoded, final Charset charset) {
         List<String> result = new ArrayList<>();
         for (Map.Entry entry : map.entrySet()) {
             String encodedName = (String)entry.getKey();
             if (!encoded) {
-                encodedName = EncodingUtils.encode(encodedName);
+                encodedName = EncodingUtils.encode(encodedName, charset);
             }
             encodedName = "["+encodedName+"]";
             
             if (entry.getValue() instanceof Map) {
-                for (String str : toSubQueryString((Map)entry.getValue(), encoded)) {
+                for (String str : toSubQueryString((Map)entry.getValue(), encoded, charset)) {
                     result.add(encodedName+str);
                 }
             } else if (entry.getValue() instanceof List) {
-                for (String str : toQueryString((List)entry.getValue(), encoded)) {
+                for (String str : toQueryString((List)entry.getValue(), encoded, charset)) {
                     result.add(encodedName+str);
                 }
             } else {
                 String value = (String)entry.getValue();
                 if (!encoded) {
-                    value = EncodingUtils.encode(entry.getValue().toString());
+                    value = EncodingUtils.encode(entry.getValue().toString(), charset);
                 }
                 result.add(encodedName+"="+value);
             }
         }
         return result;
     }
-    public static List<String> toQueryString(final List list, final boolean encoded) {
+    public static List<String> toQueryString(final List list, final boolean encoded, final Charset charset) {
         List<String> result = new ArrayList();
         Iterator it = list.iterator();
         for (int i = 0; it.hasNext(); i++) {
@@ -146,13 +146,13 @@ public class QueryStringUtils {
             
             String current = i+"";
             if (obj instanceof Map) {
-                current += toQueryString((Map)obj, encoded);
+                current += toQueryString((Map)obj, encoded, charset);
             } else if (obj instanceof List) {
-                current += toQueryString((List)obj, encoded);
+                current += toQueryString((List)obj, encoded, charset);
             } else {
                 String value = (String)obj;
                 if (!encoded) {
-                    value = EncodingUtils.encode((String)obj);
+                    value = EncodingUtils.encode((String)obj, charset);
                 }
                 current += "="+value;
             }

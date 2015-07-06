@@ -16,27 +16,46 @@ package com.crosstreelabs.jaxrs.api.versioned.util;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
 public class EncodingUtils {
-    public static String decode(final String str) {
+    
+    public static String decode(final String str, final Charset charset) {
         try {
-            return URLDecoder.decode(str, "UTF-8");
+            return URLDecoder.decode(str, charset.name());
         } catch (UnsupportedEncodingException ex) {
-            throw new RuntimeException(ex);
+            throw new AssertionError(charset.name()+" not supported");
         }
     }
-    public static Map<String, Object> decode(final Map<String, Object> map) {
+//    public static MultivaluedMap<String, String> decode(final MultivaluedMap<String, String> map) {
+//        MultivaluedMap<String, String> decoded = new MultivaluedHashMap<>();
+//        for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+//            List<String> values = entry.getValue();
+//            for (String value : values) {
+//                try {
+//                    String key = URLDecoder.decode(entry.getKey(), UTF_8);
+//                    String v = URLDecoder.decode(value, UTF_8);
+//                    decoded.add(key, v);
+//                } catch (UnsupportedEncodingException ex) {
+//                    throw new RuntimeException(ex);
+//                }
+//            }
+//        }
+//        return decoded;
+//    }
+    public static Map<String, Object> decode(final Map<String, Object> map, final Charset charset) {
         try {
             Map<String, Object> decoded = map.getClass().newInstance();
             for (Map.Entry<String, Object> entry : map.entrySet()) {
+                String key = decode(entry.getKey(), charset);
                 if (entry.getValue() instanceof Map) {
-                    decoded.put(decode(entry.getKey()), decode((Map)entry.getValue()));
+                    decoded.put(key, decode((Map)entry.getValue(), charset));
                 } else if (entry.getValue() instanceof List) {
-                    decoded.put(decode(entry.getKey()), decode((List)entry.getValue()));
+                    decoded.put(key, decode((List)entry.getValue(), charset));
                 } else {
-                    decoded.put(decode(entry.getKey()), decode((String)entry.getValue()));
+                    decoded.put(key, decode((String)entry.getValue(), charset));
                 }
             }
             return decoded;
@@ -44,16 +63,16 @@ public class EncodingUtils {
             throw new RuntimeException(ex);
         }
     }
-    public static List decode(final List list) {
+    public static List decode(final List list, final Charset charset) {
         try {
             List decoded = list.getClass().newInstance();
             for (Object obj : list) {
                 if (obj instanceof Map) {
-                    decoded.add(decode((Map)obj));
+                    decoded.add(decode((Map)obj, charset));
                 } else if (obj instanceof List) {
-                    decoded.add(decode((List)obj));
+                    decoded.add(decode((List)obj, charset));
                 } else {
-                    decoded.add(decode((String)obj));
+                    decoded.add(decode((String)obj, charset));
                 }
             }
             return decoded;
@@ -61,9 +80,9 @@ public class EncodingUtils {
             throw new RuntimeException(ex);
         }
     }
-    public static String encode(final String str) {
+    public static String encode(final String str, final Charset charset) {
         try {
-            return URLEncoder.encode(str, "UTF-8");
+            return URLEncoder.encode(str, charset.name());
         } catch (UnsupportedEncodingException ex) {
             throw new RuntimeException(ex);
         }

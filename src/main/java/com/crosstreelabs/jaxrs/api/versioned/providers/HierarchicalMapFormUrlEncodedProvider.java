@@ -28,7 +28,6 @@ import java.util.Map;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -57,16 +56,12 @@ public class HierarchicalMapFormUrlEncodedProvider
             final MediaType mediaType,
             final MultivaluedMap<String, String> httpHeaders,
             final InputStream entityStream) throws IOException {
-        if (isContentLengthZero(httpHeaders)) {
-            return new HashMap<>();
-        }
         Map<String, Object> result
                 = QueryStringUtils.toMap(StreamUtils.toString(entityStream));
-        
-        if (AnnotationUtils.find(Encoded.class, annotations) != null) {
-            return result;
+        if (AnnotationUtils.find(Encoded.class, annotations) == null) {
+            return (Map)EncodingUtils.decode(result, StandardCharsets.UTF_8);
         }
-        return EncodingUtils.decode(result);
+        return result;
     }
 
     @Override
@@ -96,20 +91,7 @@ public class HierarchicalMapFormUrlEncodedProvider
             final OutputStream entityStream) throws IOException {
         
         boolean encoded = AnnotationUtils.find(Encoded.class, annotations) != null;
-        entityStream.write(QueryStringUtils.toQueryString(data, encoded).getBytes(StandardCharsets.UTF_8));
+        entityStream.write(QueryStringUtils.toQueryString(data, encoded, StandardCharsets.UTF_8).getBytes(StandardCharsets.UTF_8));
     }
 
-    protected static boolean isContentLengthZero(final MultivaluedMap httpHeaders) {
-        if (httpHeaders == null) {
-            return false;
-        }
-        String contentLength = (String)httpHeaders.getFirst(HttpHeaders.CONTENT_LENGTH);
-        if (contentLength != null) {
-            long length = Long.parseLong(contentLength);
-            if (length == 0) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

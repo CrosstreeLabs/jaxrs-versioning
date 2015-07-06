@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class VersionUtilsTest {
+    protected static final VersionUtils UTIL = new VersionUtils();
     
     @Test
     public void testIsCompatible() {

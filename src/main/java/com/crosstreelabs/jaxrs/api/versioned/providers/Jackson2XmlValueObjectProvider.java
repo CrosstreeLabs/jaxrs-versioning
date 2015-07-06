@@ -65,7 +65,7 @@ public class Jackson2XmlValueObjectProvider extends AbstractValueObjectReaderWri
 
     @Override
     public void write(ValueObject obj, OutputStream entityStream) throws IOException {
-        entityStream.write(MAPPER.writeValueAsBytes(obj));
+        entityStream.write(MAPPER.writer().withRootName("xml").writeValueAsBytes(obj));
     }
     
 }
