@@ -57,9 +57,9 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 public class XmlValueObjectProviderTest {
     
     protected static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
-    protected static final MediaType USER1_TYPE = MediaType.valueOf(UserV1.TYPE_STR+".v1+xml");
-    protected static final MediaType USER2_TYPE = MediaType.valueOf(UserV2.TYPE_STR+".v2+xml");
-    protected static final MediaType BOOK1_TYPE = MediaType.valueOf(BookVO.TYPE_STR+".v1+xml");
+    protected static final MediaType USER1_TYPE = MediaType.valueOf(UserV1.TYPE_STR+"+xml;v=1");
+    protected static final MediaType USER2_TYPE = MediaType.valueOf(UserV2.TYPE_STR+"+xml;v=2");
+    protected static final MediaType BOOK1_TYPE = MediaType.valueOf(BookVO.TYPE_STR+"+xml;v=1");
     
     @Parameterized.Parameters
     public static Collection<Object[]> data() {

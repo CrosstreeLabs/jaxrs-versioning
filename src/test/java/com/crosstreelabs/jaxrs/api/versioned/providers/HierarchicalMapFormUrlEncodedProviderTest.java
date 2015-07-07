@@ -13,13 +13,11 @@
  */
 package com.crosstreelabs.jaxrs.api.versioned.providers;
 
-import static com.crosstreelabs.jaxrs.api.versioned.providers.MultivaluedMapFormUrlEncodedProviderTest.UNDER_TEST;
 import com.google.gson.Gson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -31,14 +29,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertThat;
 import org.junit.Test;
-import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 public class HierarchicalMapFormUrlEncodedProviderTest {
     protected static final HierarchicalMapFormUrlEncodedProvider UNDER_TEST

@@ -53,19 +53,21 @@ public class ValueObjectRegistryTest {
 
     @Test
     public void testFindForMediaType() {
-        assertThat(ValueObjectRegistry.findForMediaType(MediaType.valueOf("application/vnd.crosstreelabs.user.v1+json")),
+        assertThat(ValueObjectRegistry.findForMediaType(MediaType.valueOf("application/vnd.crosstreelabs.user+json;v=1")),
                 is(nullValue()));
         ValueObjectRegistry.register(Unversioned.class);
-        assertThat(ValueObjectRegistry.findForMediaType(MediaType.valueOf("application/vnd.crosstreelabs.user.v1+json")),
+        assertThat(ValueObjectRegistry.findForMediaType(MediaType.valueOf("application/vnd.crosstreelabs.user+json;v=1")),
                 is(nullValue()));
-        ValueObjectRegistry.register(UserV1.class);
-        assertThat(ValueObjectRegistry.findForMediaType(MediaType.valueOf("application/vnd.crosstreelabs.user.v1+json")),
+        ValueObjectRegistry.register(UserV1.class, UserV2.class);
+        assertThat(ValueObjectRegistry.findForMediaType(MediaType.valueOf("application/vnd.crosstreelabs.user+json;v=1")),
                 is(equalTo((Class)UserV1.class)));
+        assertThat(ValueObjectRegistry.findForMediaType(MediaType.valueOf("application/vnd.crosstreelabs.user+json")),
+                is(equalTo((Class)UserV2.class)));
     }
 
     @Test
     public void testRegisterArray() {
-        assertThat(ValueObjectRegistry.findForMediaType(MediaType.valueOf("application/vnd.crosstreelabs.user.v1+json")),
+        assertThat(ValueObjectRegistry.findForMediaType(MediaType.valueOf("application/vnd.crosstreelabs.user+json;v=1")),
                 is(nullValue()));
         ValueObjectRegistry.register(UserV1.class, UserV2.class, Unversioned.class);
         assertThat(ValueObjectRegistry.getClasses(), hasItems(UserV1.class, UserV2.class, Unversioned.class));
@@ -73,7 +75,7 @@ public class ValueObjectRegistryTest {
 
     @Test
     public void testRegisterCollection() {
-        assertThat(ValueObjectRegistry.findForMediaType(MediaType.valueOf("application/vnd.crosstreelabs.user.v1+json")),
+        assertThat(ValueObjectRegistry.findForMediaType(MediaType.valueOf("application/vnd.crosstreelabs.user+json;v=1")),
                 is(nullValue()));
         ValueObjectRegistry.register(Arrays.asList(UserV1.class, UserV2.class, Unversioned.class));
         assertThat(ValueObjectRegistry.getClasses(), hasItems(UserV1.class, UserV2.class, Unversioned.class));

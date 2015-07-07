@@ -32,16 +32,28 @@ public class ValueObjectRegistry {
         return Collections.unmodifiableSet(CLASSES);
     }
     public static Class<? extends ValueObject> findForMediaType(final MediaType type) {
+        int targetVersion = type.getParameters().containsKey("v")
+                ? Integer.valueOf(type.getParameters().get("v"))
+                : -1;
+        Version highest = null;
+        Class<? extends ValueObject> highestClass = null;
         for (Class<? extends ValueObject> cls : CLASSES) {
             if (!cls.isAnnotationPresent(Version.class)) {
                 continue;
             }
             Version version = cls.getAnnotation(Version.class);
-            if (VersionUtils.isCompatible(type, version)) {
+            if (!VersionUtils.isCompatible(type, version)) {
+                continue;
+            }
+            if (version.value() == targetVersion) {
                 return cls;
             }
+            if (highest == null || version.value() > highest.value()) {
+                highest = version;
+                highestClass = cls;
+            }
         }
-        return null;
+        return highestClass;
     }
     public static void register(final Class<? extends ValueObject> cls) {
         CLASSES.add(cls);

@@ -52,9 +52,9 @@ public class JsonValueObjectProviderTest {
     
     protected static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
     protected static final Annotation[] ENCODED;
-    protected static final MediaType USER1_TYPE = MediaType.valueOf(UserV1.TYPE_STR+".v1+json");
-    protected static final MediaType USER2_TYPE = MediaType.valueOf(UserV2.TYPE_STR+".v2+json");
-    protected static final MediaType BOOK1_TYPE = MediaType.valueOf(BookVO.TYPE_STR+".v1+json");
+    protected static final MediaType USER1_TYPE = MediaType.valueOf(UserV1.TYPE_STR+"+json;v=1");
+    protected static final MediaType USER2_TYPE = MediaType.valueOf(UserV2.TYPE_STR+"+json;v=2");
+    protected static final MediaType BOOK1_TYPE = MediaType.valueOf(BookVO.TYPE_STR+"+json;v=1");
     
     static {
         Encoded e = mock(Encoded.class);

@@ -32,12 +32,12 @@ public class VersionUtilsTest {
     public void testIsCompatible() {
         Version version = v(1, "application/vnd.crosstreelabs.user");
         
-        assertThat(isCompatible(t("application/vnd.crosstreelabs.user"), version), is(false));
-        assertThat(isCompatible(t("application/vnd.crosstreelabs.user.v1"), version), is(true));
-        assertThat(isCompatible(t("application/vnd.crosstreelabs.user.v1+json"), version), is(true));
-        assertThat(isCompatible(t("application/vnd.crosstreelabs.user.v1+xml"), version), is(true));
-        assertThat(isCompatible(t("application/vnd.crosstreelabs.user.v2"), version), is(false));
-        assertThat(isCompatible(t("application/vnd.crosstreelabs.user.v2+json"), version), is(false));
+        assertThat(isCompatible(t("application/vnd.crosstreelabs.user"), version), is(true));
+        assertThat(isCompatible(t("application/vnd.crosstreelabs.user;v=1"), version), is(true));
+        assertThat(isCompatible(t("application/vnd.crosstreelabs.user+json;v=1"), version), is(true));
+        assertThat(isCompatible(t("application/vnd.crosstreelabs.user+xml;v=1"), version), is(true));
+        assertThat(isCompatible(t("application/vnd.crosstreelabs.user;v=2"), version), is(false));
+        assertThat(isCompatible(t("application/vnd.crosstreelabs.user+json;v=2"), version), is(false));
         assertThat(isCompatible(t("application/vnd.crosstreelabs.book"), version), is(false));
     }
 
@@ -46,7 +46,7 @@ public class VersionUtilsTest {
      */
     @Test
     public void testDefaultMediaType() {
-        assertThat(defaultMediaType(v(1, "application/vnd.crosstreelabs.user")), is(equalTo("application/vnd.crosstreelabs.user.v1")));
+        assertThat(defaultMediaType(v(1, "application/vnd.crosstreelabs.user")), is(equalTo("application/vnd.crosstreelabs.user;v=1")));
         assertThat(defaultMediaType(v(1, new String[0])), is(nullValue()));
     }
     

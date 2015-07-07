@@ -13,9 +13,6 @@
  */
 package com.crosstreelabs.jaxrs.api.versioned.providers;
 
-import com.crosstreelabs.jaxrs.api.versioned.providers.Jackson1JsonValueObjectProvider;
-import com.crosstreelabs.jaxrs.api.versioned.providers.GsonJsonValueObjectProvider;
-import com.crosstreelabs.jaxrs.api.versioned.providers.Jackson2JsonValueObjectProvider;
 import com.crosstreelabs.jaxrs.api.versioned.ValueObjectRegistry;
 import com.crosstreelabs.jaxrs.api.versioned.exception.ValidationExceptionMapper;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.UserV1;
@@ -85,7 +82,7 @@ public class JsonValueObjectProviderITTest {
         
         Response response = jersey.getClient().target("/")
                 .request("application/json")
-                .post(Entity.entity(user, MediaType.valueOf(UserV1.TYPE_STR+".v1+json")));
+                .post(Entity.entity(user, MediaType.valueOf(UserV1.TYPE_STR+"+json;v=1")));
         assertThat(response.getStatus(), is(400));
         assertThat(response.readEntity(String.class), anyOf(
                 is(equalTo("{\"message\":\"username may not be null\"}")),

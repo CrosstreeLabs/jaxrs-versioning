@@ -21,13 +21,18 @@ public class VersionUtils {
             final Version version) {
         // Remove suffix
         MediaType target = mediaType;
+        int targetVersion = mediaType.getParameters().containsKey("v")
+                ? Integer.valueOf(mediaType.getParameters().get("v"))
+                : -1;
         if (mediaType.toString().contains("+")) {
             String str = mediaType.toString();
             str = str.substring(0, str.indexOf("+"));
             target = MediaType.valueOf(str);
         }
         for (String allowedType : version.contentType()) {
-            if (MediaType.valueOf(allowedType+".v"+version.value()).isCompatible(target)) {
+            if (MediaType.valueOf(allowedType).isCompatible(target)
+                    && (targetVersion == -1
+                    || targetVersion == version.value())) {
                 return true;
             }
         }
@@ -38,6 +43,6 @@ public class VersionUtils {
             return null;
         }
         
-        return version.contentType()[0]+".v"+version.value();
+        return version.contentType()[0]+";v="+version.value();
     }
 }
