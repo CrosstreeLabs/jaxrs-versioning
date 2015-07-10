@@ -109,7 +109,7 @@ public class QueryStringUtils {
             }
         }
 
-        return sb.toString();
+        return sb.deleteCharAt(0).toString();
     }
     protected static List<String> toSubQueryString(final Map<?,?> map, final boolean encoded, final Charset charset) {
         List<String> result = new ArrayList<>();

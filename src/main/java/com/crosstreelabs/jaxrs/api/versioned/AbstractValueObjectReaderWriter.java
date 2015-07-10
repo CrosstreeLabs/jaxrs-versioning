@@ -57,13 +57,17 @@ import org.slf4j.LoggerFactory;
  * representation of the value object.
  */
 public abstract class AbstractValueObjectReaderWriter
-        implements MessageBodyReader<Object>, MessageBodyWriter<Object> {
+        implements MessageBodyReader<ValueObject>, MessageBodyWriter<ValueObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractValueObjectReaderWriter.class);
+    
     public abstract Map readMap(InputStream entityStream) throws IOException;
-    public abstract ValueObject readObject(InputStream entityStream, ValueObject vo)
-            throws IOException;
-    public abstract void write(ValueObject obj, OutputStream entityStream)
-            throws IOException;
+    
+    public abstract ValueObject readObject(InputStream entityStream,
+            ValueObject vo) throws IOException;
+    
+    public abstract void write(ValueObject obj, Annotation[] annotations,
+            MediaType mediaType, MultivaluedMap<String, Object> headers,
+            OutputStream entityStream) throws IOException;
     
     //~ MessageBodyReader/Writer impl ~~~~~~~~~~~~~~~~~~~~~
     /**
@@ -107,7 +111,7 @@ public abstract class AbstractValueObjectReaderWriter
     }
 
     @Override
-    public ValueObject readFrom(final Class<Object> type,
+    public ValueObject readFrom(final Class<ValueObject> type,
             final Type genericType,
             final Annotation[] annotations,
             final MediaType mediaType,
@@ -150,7 +154,7 @@ public abstract class AbstractValueObjectReaderWriter
     }
 
     @Override
-    public long getSize(final Object t,
+    public long getSize(final ValueObject t,
             final Class<?> type,
             final Type genericType,
             final Annotation[] annotations,
@@ -159,7 +163,7 @@ public abstract class AbstractValueObjectReaderWriter
     }
 
     @Override
-    public void writeTo(final Object obj,
+    public void writeTo(final ValueObject obj,
             final Class<?> type,
             final Type genericType,
             final Annotation[] annotations,
@@ -183,7 +187,7 @@ public abstract class AbstractValueObjectReaderWriter
         } else {
             httpHeaders.putSingle("Content-Type", mediaType.toString());
         }
-        write(vo, entityStream);
+        write(vo, annotations, mediaType, httpHeaders, entityStream);
     }
     
     //~ Internal helpers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

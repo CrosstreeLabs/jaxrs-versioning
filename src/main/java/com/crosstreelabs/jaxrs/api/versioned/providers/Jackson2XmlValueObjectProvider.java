@@ -11,9 +11,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 
 /**
@@ -45,12 +45,13 @@ public class Jackson2XmlValueObjectProvider extends AbstractValueObjectReaderWri
     }
 
     @Override
-    public Map readMap(InputStream entityStream) throws IOException {
+    public Map readMap(final InputStream entityStream) throws IOException {
         return MAPPER.readValue(entityStream, Map.class);
     }
 
     @Override
-    public ValueObject readObject(InputStream entityStream, ValueObject vo) throws IOException {
+    public ValueObject readObject(final InputStream entityStream,
+            final ValueObject vo) throws IOException {
         return MAPPER.readValue(entityStream, vo.getClass());
     }
 
@@ -64,7 +65,10 @@ public class Jackson2XmlValueObjectProvider extends AbstractValueObjectReaderWri
     }
 
     @Override
-    public void write(ValueObject obj, OutputStream entityStream) throws IOException {
+    public void write(final ValueObject obj, final Annotation[] annotations,
+            final MediaType mediaType,
+            final MultivaluedMap<String, Object> headers,
+            final OutputStream entityStream) throws IOException {
         entityStream.write(MAPPER.writer().withRootName("xml").writeValueAsBytes(obj));
     }
     

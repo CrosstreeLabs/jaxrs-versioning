@@ -23,15 +23,11 @@ import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.hierarchical.BookVO;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.hierarchical.ResourceVO;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.ValidationException;
-import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.core.MediaType;
@@ -40,18 +36,14 @@ import org.custommonkey.xmlunit.Diff;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import org.skyscreamer.jsonassert.JSONAssert;
-import org.skyscreamer.jsonassert.JSONCompareMode;
 
 @RunWith(Parameterized.class)
 public class XmlValueObjectProviderTest {
@@ -110,15 +102,13 @@ public class XmlValueObjectProviderTest {
     
     @Test
     public void testReadFromNullInputStreamYieldsEmptyVO() throws Exception {
-        Class<?> type = UserV1.class;
-        assertThat(underTest.readFrom((Class<Object>)type, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/missing.xml")),
+        assertThat(underTest.readFrom((Class)UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/missing.xml")),
                 is(instanceOf(UserV1.class)));
     }
     
     @Test
     public void testReadFromRealInputStreamYieldsPopulatedVO() throws Exception {
-        Class<?> type = UserV1.class;
-        Object result = underTest.readFrom((Class<Object>)type, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/user.v1.xml"));
+        Object result = underTest.readFrom((Class)UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, USER1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/user.v1.xml"));
         assertThat(result, is(instanceOf(UserV1.class)));
         assertThat(((UserV1)result).name, is(equalTo("Thomas")));
         assertThat(((UserV1)result).username, is(equalTo("thomas.wilson")));
@@ -127,8 +117,7 @@ public class XmlValueObjectProviderTest {
     
     @Test
     public void ensureThatConsumerWorks() throws Exception {
-        Class<?> type = UserV2.class;
-        Object result = underTest.readFrom((Class<Object>)type, UserV2.class, EMPTY_ANNOTATIONS, USER2_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/user.v2.xml"));
+        Object result = underTest.readFrom((Class)UserV2.class, UserV2.class, EMPTY_ANNOTATIONS, USER2_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/user.v2.xml"));
         assertThat(result, is(instanceOf(UserV2.class)));
         assertThat(((UserV2)result).getName(), is(equalTo("Thomas")));
         assertThat(((UserV2)result).getUsername(), is(equalTo("thomas.wilson")));
@@ -149,11 +138,6 @@ public class XmlValueObjectProviderTest {
         assertTrue(diff.similar());
     }
     
-    @Test(expected = InternalServerErrorException.class)
-    public void ensureWritingNonValueObjectFails() throws Exception {
-        underTest.writeTo(new Object(), Object.class, Object.class, EMPTY_ANNOTATIONS, USER1_TYPE, null, null);
-    }
-    
     @Test(expected = NotAcceptableException.class)
     public void ensureWritingVOWithoutContentTypeFails() throws Exception {
         underTest.writeTo(new Uncontented(), Uncontented.class, Uncontented.class, EMPTY_ANNOTATIONS, USER1_TYPE, null, null);
@@ -170,8 +154,7 @@ public class XmlValueObjectProviderTest {
     
     @Test
     public void ensureHierarchicalResourceResolutionWorks() throws Exception {
-        Class<?> type = ResourceVO.class;
-        Object result = underTest.readFrom((Class<Object>)type, ResourceVO.class, EMPTY_ANNOTATIONS, BOOK1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/book.v1.xml"));
+        Object result = underTest.readFrom((Class)ResourceVO.class, ResourceVO.class, EMPTY_ANNOTATIONS, BOOK1_TYPE, new MultivaluedHashMap<String, String>(), getResource("unit/representations/book.v1.xml"));
         assertThat(result, is(instanceOf(BookVO.class)));
         assertThat(((BookVO)result).title, is(equalTo("The Cat In The Hat")));
         assertThat(((BookVO)result).description, is(equalTo("The Cat in the Hat is a children's book.")));

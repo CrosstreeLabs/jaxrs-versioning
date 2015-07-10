@@ -70,7 +70,7 @@ public class JsonValueObjectProviderITTest {
         
         assertThat(jersey.getClient().target("/")
                 .request()
-                .post(Entity.entity(user, MediaType.valueOf(UserV1.TYPE_STR+".v1+json")))
+                .post(Entity.entity(user, MediaType.valueOf(UserV1.TYPE_STR+"+json;v=1")))
                 .getStatus(),
                 is(201));
     }

@@ -29,22 +29,6 @@ public class EncodingUtils {
             throw new AssertionError(charset.name()+" not supported");
         }
     }
-//    public static MultivaluedMap<String, String> decode(final MultivaluedMap<String, String> map) {
-//        MultivaluedMap<String, String> decoded = new MultivaluedHashMap<>();
-//        for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-//            List<String> values = entry.getValue();
-//            for (String value : values) {
-//                try {
-//                    String key = URLDecoder.decode(entry.getKey(), UTF_8);
-//                    String v = URLDecoder.decode(value, UTF_8);
-//                    decoded.add(key, v);
-//                } catch (UnsupportedEncodingException ex) {
-//                    throw new RuntimeException(ex);
-//                }
-//            }
-//        }
-//        return decoded;
-//    }
     public static Map<String, Object> decode(final Map<String, Object> map, final Charset charset) {
         try {
             Map<String, Object> decoded = map.getClass().newInstance();

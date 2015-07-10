@@ -12,6 +12,7 @@ import java.util.Map;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 
 /**
@@ -50,7 +51,7 @@ public class Jackson2JsonValueObjectProvider
 
     @Override
     public ValueObject readObject(final InputStream entityStream,
-            ValueObject vo) throws IOException {
+            final ValueObject vo) throws IOException {
         return MAPPER.readValue(entityStream, vo.getClass());
     }
 
@@ -64,8 +65,10 @@ public class Jackson2JsonValueObjectProvider
     }
 
     @Override
-    public void write(final ValueObject obj, final OutputStream entityStream)
-            throws IOException {
+    public void write(final ValueObject obj, final Annotation[] annotations,
+            final MediaType mediaType,
+            final MultivaluedMap<String, Object> headers,
+            final OutputStream entityStream) throws IOException {
         entityStream.write(MAPPER.writeValueAsBytes(obj));
     }
     
