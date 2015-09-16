@@ -15,7 +15,9 @@ package com.crosstreelabs.jaxrs.api.versioned.providers;
 
 import com.crosstreelabs.jaxrs.api.versioned.util.AnnotationUtils;
 import com.crosstreelabs.jaxrs.api.versioned.util.EncodingUtils;
+import com.crosstreelabs.jaxrs.api.versioned.util.QueryStringUtils;
 import com.crosstreelabs.jaxrs.api.versioned.util.StreamUtils;
+import com.crosstreelabs.jaxrs.api.versioned.util.StringUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,11 +27,15 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -48,6 +54,9 @@ public class MultivaluedMapFormUrlEncodedProvider
         implements MessageBodyReader<MultivaluedMap>,
                 MessageBodyWriter<MultivaluedMap> {
     
+    @Context
+    HttpServletRequest request;
+    
     @Override
     public boolean isReadable(final Class<?> type,
             final Type genericType,
@@ -65,7 +74,23 @@ public class MultivaluedMapFormUrlEncodedProvider
             final MediaType mediaType,
             final MultivaluedMap<String, String> httpHeaders,
             final InputStream entityStream) throws IOException {
+        // Request body params
         MultivaluedMap result = parseForm(entityStream);
+        
+        // Query string params
+        if (request != null) {
+            Map<String, String[]> tmp = request.getParameterMap();
+            Collection<String> coll = new ArrayList<>();
+            for (String key : tmp.keySet()) {
+                for (String value : tmp.get(key)) {
+                    coll.add(key+"="+value);
+                }
+            }
+            String tmpStr = StringUtils.join(coll,"&");
+            result.putAll(QueryStringUtils.toMap(tmpStr));
+        }
+        
+        // Decode if required
         if (AnnotationUtils.find(Encoded.class, annotations) == null) {
             return (MultivaluedMap)EncodingUtils.decode(result, StandardCharsets.UTF_8);
         }

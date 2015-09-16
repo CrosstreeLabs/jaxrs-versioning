@@ -21,6 +21,10 @@ import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.UserV1;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.UserV2;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.hierarchical.BookVO;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.hierarchical.ResourceVO;
+import com.crosstreelabs.jaxrs.api.versioned.mapper.Mapper;
+import com.crosstreelabs.jaxrs.api.versioned.mapper.impl.GsonJsonMapper;
+import com.crosstreelabs.jaxrs.api.versioned.mapper.impl.Jackson1JsonMapper;
+import com.crosstreelabs.jaxrs.api.versioned.mapper.impl.Jackson2JsonMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -70,17 +74,17 @@ public class JsonValueObjectProviderTest {
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-            { new Jackson1JsonValueObjectProvider() },
-            { new Jackson2JsonValueObjectProvider() },
-            { new GsonJsonValueObjectProvider() }
+            { new Jackson1JsonMapper() },
+            { new Jackson2JsonMapper() },
+            { new GsonJsonMapper() }
         });
     }
     
     private final AbstractValueObjectReaderWriter underTest;
     
     public JsonValueObjectProviderTest(
-            final AbstractValueObjectReaderWriter underTest) {
-        this.underTest = underTest;
+            final Mapper mapper) {
+        this.underTest = new StandardValueObjectProvider(mapper);
     }
     
     @Test

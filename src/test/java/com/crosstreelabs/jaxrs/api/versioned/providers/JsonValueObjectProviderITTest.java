@@ -16,7 +16,11 @@ package com.crosstreelabs.jaxrs.api.versioned.providers;
 import com.crosstreelabs.jaxrs.api.versioned.ValueObjectRegistry;
 import com.crosstreelabs.jaxrs.api.versioned.exception.ValidationExceptionMapper;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.UserV1;
-import com.crosstreelabs.testing.jersey.Jersey;
+import com.crosstreelabs.jaxrs.api.versioned.mapper.Mapper;
+import com.crosstreelabs.jaxrs.api.versioned.mapper.impl.GsonJsonMapper;
+import com.crosstreelabs.jaxrs.api.versioned.mapper.impl.Jackson1JsonMapper;
+import com.crosstreelabs.jaxrs.api.versioned.mapper.impl.Jackson2JsonMapper;
+import com.crosstreelabs.junited.jersey.JerseyRule;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import java.net.URI;
 import java.util.Arrays;
@@ -42,14 +46,14 @@ import org.junit.runners.Parameterized;
 public class JsonValueObjectProviderITTest {
     
     @Rule
-    public final Jersey jersey;
+    public final JerseyRule jersey;
     
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
-            { Jackson1JsonValueObjectReaderWriterTestable.class },
-            { Jackson2JsonValueObjectReaderWriterTestable.class },
-            { GsonJsonValueObjectReaderWriterTestable.class }
+            { new StandardValueObjectProviderTestable(new GsonJsonMapper()) },
+            { new StandardValueObjectProviderTestable(new Jackson1JsonMapper()) },
+            { new StandardValueObjectProviderTestable(new Jackson2JsonMapper()) }
         });
     }
     
@@ -57,8 +61,8 @@ public class JsonValueObjectProviderITTest {
         ValueObjectRegistry.register(UserV1.class);
     }
     
-    public JsonValueObjectProviderITTest(final Class<?> cls) throws Exception {
-        jersey = new Jersey(cls, ValidationExceptionMapper.class, JacksonJsonProvider.class, UserResource.class);
+    public JsonValueObjectProviderITTest(Object provider) throws Exception {
+        jersey = new JerseyRule(provider, ValidationExceptionMapper.class, JacksonJsonProvider.class, UserResource.class);
     }
     
     @Test
@@ -104,14 +108,10 @@ public class JsonValueObjectProviderITTest {
     
     @Provider
     @Priority(Integer.MAX_VALUE)
-    public static class Jackson1JsonValueObjectReaderWriterTestable
-            extends Jackson1JsonValueObjectProvider {}
-    @Provider
-    @Priority(Integer.MAX_VALUE)
-    public static class Jackson2JsonValueObjectReaderWriterTestable
-            extends Jackson2JsonValueObjectProvider {}
-    @Provider
-    @Priority(Integer.MAX_VALUE)
-    public static class GsonJsonValueObjectReaderWriterTestable
-            extends GsonJsonValueObjectProvider {}
+    public static class StandardValueObjectProviderTestable
+            extends StandardValueObjectProvider {
+        public StandardValueObjectProviderTestable(final Mapper mapper) {
+            super(mapper);
+        }
+    }
 }

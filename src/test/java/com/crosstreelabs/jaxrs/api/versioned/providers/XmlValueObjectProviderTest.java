@@ -21,6 +21,7 @@ import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.UserV1;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.UserV2;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.hierarchical.BookVO;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.hierarchical.ResourceVO;
+import com.crosstreelabs.jaxrs.api.versioned.mapper.impl.Jackson2XmlMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -56,7 +57,7 @@ public class XmlValueObjectProviderTest {
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-            { new Jackson2XmlValueObjectProvider() }
+            { new StandardValueObjectProvider(new Jackson2XmlMapper()) }
         });
     }
     
