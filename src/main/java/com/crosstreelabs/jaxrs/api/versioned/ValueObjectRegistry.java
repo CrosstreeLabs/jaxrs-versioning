@@ -45,10 +45,10 @@ public class ValueObjectRegistry {
             if (!VersionUtils.isCompatible(type, version)) {
                 continue;
             }
-            if (version.value() == targetVersion) {
+            if (version.version() == targetVersion) {
                 return cls;
             }
-            if (highest == null || version.value() > highest.value()) {
+            if (highest == null || version.version() > highest.version()) {
                 highest = version;
                 highestClass = cls;
             }
@@ -63,6 +63,9 @@ public class ValueObjectRegistry {
     }
     public static void register(final Collection<Class<? extends ValueObject>> classes) {
         CLASSES.addAll(classes);
+    }
+    public static void clear() {
+        CLASSES.clear();
     }
     
 }

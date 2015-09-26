@@ -21,6 +21,7 @@ import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.UserV1;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.UserV2;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.hierarchical.BookVO;
 import com.crosstreelabs.jaxrs.api.versioned.fixtures.vo.hierarchical.ResourceVO;
+import com.crosstreelabs.jaxrs.api.versioned.mapper.Mapper;
 import com.crosstreelabs.jaxrs.api.versioned.mapper.impl.Jackson2XmlMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -53,22 +54,28 @@ public class XmlValueObjectProviderTest {
     protected static final MediaType USER1_TYPE = MediaType.valueOf(UserV1.TYPE_STR+"+xml;v=1");
     protected static final MediaType USER2_TYPE = MediaType.valueOf(UserV2.TYPE_STR+"+xml;v=2");
     protected static final MediaType BOOK1_TYPE = MediaType.valueOf(BookVO.TYPE_STR+"+xml;v=1");
+    protected static final MediaType BOOK1_JSON_TYPE = MediaType.valueOf(BookVO.TYPE_STR+"+json;v=1");
+    
+    static {
+        ValueObjectRegistry.clear();
+        ValueObjectRegistry.register(UserV1.class);
+        ValueObjectRegistry.register(UserV2.class);
+        ValueObjectRegistry.register(BookVO.class);
+    }
     
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-            { new StandardValueObjectProvider(new Jackson2XmlMapper()) }
+            { new Jackson2XmlMapper() }
         });
     }
     
     private final AbstractValueObjectReaderWriter underTest;
+    private final Mapper mapper;
     
-    public XmlValueObjectProviderTest(
-            final AbstractValueObjectReaderWriter underTest) {
-        this.underTest = underTest;
-        ValueObjectRegistry.register(UserV1.class);
-        ValueObjectRegistry.register(UserV2.class);
-        ValueObjectRegistry.register(BookVO.class);
+    public XmlValueObjectProviderTest(final Mapper mapper) {
+        this.underTest = new StandardValueObjectProvider(mapper);
+        this.mapper = mapper;
     }
     
     @Test
@@ -79,6 +86,8 @@ public class XmlValueObjectProviderTest {
                 is(false));
         assertThat(underTest.isReadable(ResourceVO.class, ResourceVO.class, EMPTY_ANNOTATIONS, BOOK1_TYPE),
                 is(true));
+        assertThat(underTest.isReadable(ResourceVO.class, ResourceVO.class, EMPTY_ANNOTATIONS, BOOK1_JSON_TYPE),
+                is(false));
         try {
             underTest.isReadable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_XML_TYPE);
             fail("Test should have thrown NotSupportedException");
@@ -99,6 +108,19 @@ public class XmlValueObjectProviderTest {
                 is(true));
         assertThat(underTest.isWriteable(ResourceVO.class, ResourceVO.class, EMPTY_ANNOTATIONS, BOOK1_TYPE),
                 is(false));
+    }
+    
+    @Test
+    public void testConversion() {
+        UserV1 user = new UserV1();
+        user.username = "twilson";
+        user.name = "Thomas Wilson";
+        user.email = "thomas.wilson@crosstreelabs.com";
+        
+        UserV2 result = mapper.convertValue(user, UserV2.class);
+        assertThat(result.getUsername(), is(equalTo("twilson")));
+        assertThat(result.getName(), is(equalTo("Thomas Wilson")));
+        assertThat(result.getEmail(), is(equalTo("thomas.wilson@crosstreelabs.com")));
     }
     
     @Test
@@ -166,7 +188,7 @@ public class XmlValueObjectProviderTest {
         return getClass().getClassLoader().getResourceAsStream(resource);
     }
     
-    @Version(value = 1, contentType = {})
+    @Version(version = 1, contentType = {})
     public static class Uncontented implements ValueObject {
         
     }

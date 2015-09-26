@@ -21,7 +21,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.collections4.MapUtils;
 
-@Version(value = 2, contentType = {UserV2.TYPE_STR})
+@Version(version = 2, contentType = {UserV2.TYPE_STR})
 public class UserV2 implements ValueObject, Consumer {
     public static final String TYPE_STR = "application/vnd.crosstreelabs.user";
     public static final MediaType TYPE = MediaType.valueOf(TYPE_STR);

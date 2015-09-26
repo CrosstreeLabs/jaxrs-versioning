@@ -19,11 +19,17 @@ import javax.validation.ValidationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Provider
 public class ValidationExceptionMapper implements ExceptionMapper<ValidationException> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ValidationExceptionMapper.class);
+    
     @Override
     public Response toResponse(final ValidationException exception) {
+        LOGGER.error(exception.getClass().getName()+": "+exception.getMessage());
+        LOGGER.debug("", exception);
         return Response.status(Response.Status.BAD_REQUEST)
                 .entity(new HashMap<>(Collections.singletonMap("message", exception.getMessage())))
                 .build();

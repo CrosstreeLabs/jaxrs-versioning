@@ -25,14 +25,14 @@ public class VersionUtils {
                 ? Integer.valueOf(mediaType.getParameters().get("v"))
                 : -1;
         if (mediaType.toString().contains("+")) {
-            String str = mediaType.toString();
+            String str = mediaType.getType()+"/"+mediaType.getSubtype();
             str = str.substring(0, str.indexOf("+"));
             target = MediaType.valueOf(str);
         }
         for (String allowedType : version.contentType()) {
             if (MediaType.valueOf(allowedType).isCompatible(target)
                     && (targetVersion == -1
-                    || targetVersion == version.value())) {
+                    || targetVersion == version.version())) {
                 return true;
             }
         }
@@ -43,6 +43,19 @@ public class VersionUtils {
             return null;
         }
         
-        return version.contentType()[0]+";v="+version.value();
+        return version.contentType()[0]+";v="+version.version();
+    }
+    /**
+     * Adds missing parameters where required.
+     * @param mediaType
+     * @param version
+     * @return 
+     */
+    public static MediaType normalize(final MediaType mediaType,
+            final Version version) {
+        if (mediaType.getParameters().containsKey("v")) {
+            return mediaType;
+        }
+        return MediaType.valueOf(mediaType.toString()+";v="+version.version());
     }
 }

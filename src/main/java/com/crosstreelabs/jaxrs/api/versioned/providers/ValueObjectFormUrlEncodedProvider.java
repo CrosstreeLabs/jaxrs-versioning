@@ -39,6 +39,9 @@ public class ValueObjectFormUrlEncodedProvider
     @Context
     private HttpServletRequest request;
     
+    public ValueObjectFormUrlEncodedProvider() {
+        this(null);
+    }
     public ValueObjectFormUrlEncodedProvider(final Mapper mapper) {
         this.mapper = mapper;
     }

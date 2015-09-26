@@ -20,17 +20,33 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.Map;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 public class StandardValueObjectProvider
         extends AbstractValueObjectReaderWriter {
-    
     private final Mapper mapper;
     
     public StandardValueObjectProvider(final Mapper mapper) {
         this.mapper = mapper;
+    }
+
+    @Override
+    public boolean isReadable(final Class<?> type,
+            final Type genericType,
+            final Annotation[] annotations,
+            final MediaType mediaType) {
+        if (!super.isReadable(type, genericType, annotations, mediaType)) {
+            return false;
+        }
+        for (String str : mapper.supportedStructures()) {
+            if (mediaType.getSubtype().endsWith("+"+str)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

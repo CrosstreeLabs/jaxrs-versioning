@@ -30,9 +30,12 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.ValidationException;
 import javax.ws.rs.Encoded;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.core.MediaType;
@@ -58,6 +61,7 @@ public class JsonValueObjectProviderTest {
     protected static final MediaType USER1_TYPE = MediaType.valueOf(UserV1.TYPE_STR+"+json;v=1");
     protected static final MediaType USER2_TYPE = MediaType.valueOf(UserV2.TYPE_STR+"+json;v=2");
     protected static final MediaType BOOK1_TYPE = MediaType.valueOf(BookVO.TYPE_STR+"+json;v=1");
+    protected static final MediaType BOOK1_XML_TYPE = MediaType.valueOf(BookVO.TYPE_STR+"+xml;v=1");
     
     static {
         Encoded e = mock(Encoded.class);
@@ -65,7 +69,7 @@ public class JsonValueObjectProviderTest {
         ENCODED = new Annotation[]{
             e
         };
-        
+        ValueObjectRegistry.clear();
         ValueObjectRegistry.register(UserV1.class);
         ValueObjectRegistry.register(UserV2.class);
         ValueObjectRegistry.register(BookVO.class);
@@ -81,10 +85,12 @@ public class JsonValueObjectProviderTest {
     }
     
     private final AbstractValueObjectReaderWriter underTest;
+    private final Mapper mapper;
     
     public JsonValueObjectProviderTest(
             final Mapper mapper) {
         this.underTest = new StandardValueObjectProvider(mapper);
+        this.mapper = mapper;
     }
     
     @Test
@@ -95,6 +101,8 @@ public class JsonValueObjectProviderTest {
                 is(false));
         assertThat(underTest.isReadable(ResourceVO.class, ResourceVO.class, EMPTY_ANNOTATIONS, BOOK1_TYPE),
                 is(true));
+        assertThat(underTest.isReadable(ResourceVO.class, ResourceVO.class, EMPTY_ANNOTATIONS, BOOK1_XML_TYPE),
+                is(false));
         try {
             underTest.isReadable(UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_JSON_TYPE);
             fail("Test should have thrown NotSupportedException");
@@ -115,6 +123,19 @@ public class JsonValueObjectProviderTest {
                 is(true));
         assertThat(underTest.isWriteable(ResourceVO.class, ResourceVO.class, EMPTY_ANNOTATIONS, BOOK1_TYPE),
                 is(false));
+    }
+    
+    @Test
+    public void testConversion() {
+        UserV1 user = new UserV1();
+        user.username = "twilson";
+        user.name = "Thomas Wilson";
+        user.email = "thomas.wilson@crosstreelabs.com";
+        
+        UserV2 result = mapper.convertValue(user, UserV2.class);
+        assertThat(result.getUsername(), is(equalTo("twilson")));
+        assertThat(result.getName(), is(equalTo("Thomas Wilson")));
+        assertThat(result.getEmail(), is(equalTo("thomas.wilson@crosstreelabs.com")));
     }
     
     @Test
@@ -172,6 +193,11 @@ public class JsonValueObjectProviderTest {
         underTest.writeTo(new Uncontented(), Uncontented.class, Uncontented.class, EMPTY_ANNOTATIONS, USER1_TYPE, null, null);
     }
     
+    @Test(expected = InternalServerErrorException.class)
+    public void ensureWritingNonVersionedObjectThrowsException() throws Exception {
+        underTest.writeTo(new Unversioned(), Unversioned.class, Unversioned.class, EMPTY_ANNOTATIONS, USER1_TYPE, null, null);
+    }
+    
     @Test(expected = ValidationException.class)
     public void testWritingValidation() throws Exception {
         Valid v = mock(Valid.class);
@@ -179,6 +205,15 @@ public class JsonValueObjectProviderTest {
         ByteArrayOutputStream entityStream = new ByteArrayOutputStream();
         MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<>();
         underTest.writeTo(new UserV1(), UserV1.class, UserV1.class, new Annotation[]{v}, USER1_TYPE, headers, entityStream);
+    }
+    
+    @Test
+    public void ensureCorrectMediaTypeIsProvided() throws Exception {
+        ByteArrayOutputStream entityStream = new ByteArrayOutputStream();
+        MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<>();
+        underTest.writeTo(new UserV1(), UserV1.class, UserV1.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_JSON_TYPE, headers, entityStream);
+        assertThat(headers.size(), is(equalTo(1)));
+        assertThat(headers.get("Content-Type"), is(equalTo((List)Collections.singletonList("application/vnd.crosstreelabs.user;v=1"))));
     }
     
     @Test
@@ -194,8 +229,7 @@ public class JsonValueObjectProviderTest {
         return getClass().getClassLoader().getResourceAsStream(resource);
     }
     
-    @Version(value = 1, contentType = {})
-    public static class Uncontented implements ValueObject {
-        
-    }
+    @Version(version = 1)
+    public static class Uncontented implements ValueObject {}
+    public static class Unversioned implements ValueObject {}
 }

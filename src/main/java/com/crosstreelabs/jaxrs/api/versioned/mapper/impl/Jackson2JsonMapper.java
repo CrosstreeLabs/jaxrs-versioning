@@ -14,12 +14,24 @@
 package com.crosstreelabs.jaxrs.api.versioned.mapper.impl;
 
 import com.crosstreelabs.jaxrs.api.versioned.mapper.Mapper;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 
 public class Jackson2JsonMapper implements Mapper {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    public static final String[] SUPPORTS = new String[]{"json"};
+    private static final ObjectMapper MAPPER = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
+            .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
+    @Override
+    public String[] supportedStructures() {
+        return SUPPORTS;
+    }
 
     @Override
     public <T> T convertValue(final Object from, final Class<T> to) {
@@ -29,11 +41,6 @@ public class Jackson2JsonMapper implements Mapper {
     @Override
     public <T> T readValue(final InputStream is, final Class<T> to) throws IOException {
         return MAPPER.readValue(is, to);
-    }
-
-    @Override
-    public String asString(final Object from) throws IOException {
-        return MAPPER.writeValueAsString(from);
     }
 
     @Override

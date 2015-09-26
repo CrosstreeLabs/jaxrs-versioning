@@ -17,10 +17,18 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public interface Mapper {
+    /**
+     * Returns a list of one or more media type structures supported. Given a
+     * media type like `application/vnd.crosstreelabs.user+json;v=1`, the
+     * structure would be the component immediately after the `+`, in this case,
+     * `json`.
+     * @return A list of supported structure suffixes
+     */
+    String[] supportedStructures();
+    
     <T> T convertValue(Object from, Class<T> to);
     
     <T> T readValue(InputStream is, Class<T> to) throws IOException;
     
-    String asString(Object from) throws IOException;
     byte[] asBytes(Object from) throws IOException;
 }

@@ -13,17 +13,20 @@
  */
 package com.crosstreelabs.jaxrs.api.versioned.providers;
 
+import static com.crosstreelabs.jaxrs.api.versioned.providers.MultivaluedMapFormUrlEncodedProviderTest.UNDER_TEST;
 import com.google.gson.Gson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -33,10 +36,12 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import org.junit.After;
 import static org.junit.Assert.assertThat;
 import org.junit.Test;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class HierarchicalMapFormUrlEncodedProviderTest {
     protected static final HierarchicalMapFormUrlEncodedProvider UNDER_TEST
@@ -50,6 +55,11 @@ public class HierarchicalMapFormUrlEncodedProviderTest {
         ENCODED = new Annotation[]{
                 e
         };
+    }
+    
+    @After
+    public void after() throws Exception {
+        setQueryString(null);
     }
 
     @Test
@@ -66,10 +76,16 @@ public class HierarchicalMapFormUrlEncodedProviderTest {
 
     @Test
     public void testReadFrom() throws Exception {
-        Map expected = GSON.fromJson("{\"a\":\"1\",\"b\":{\"0\":\"2\",\"a\":\"3\",\"1\":\"4\"},\"c\":{\"a\":{\"b\":\"5\"}},\"d\":\"\"}", Map.class);
+        Map expected = GSON.fromJson("{\"a\":\"1\",\"b\":{\"0\":\"2\",\"a\":\"3\",\"1\":\"4\"},\"c\":{\"a\":{\"b\":\"5\"}},\"d\":\"\", \"e\":\"6\"}", Map.class);
+        setQueryString(new HashMap<String, String[]>(){{
+            put("e", new String[]{"6"});
+        }});
         
         assertThat(UNDER_TEST.readFrom(Map.class, Map.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedStringMap(), qs("a=1&b[]=2&b[a]=3&b[]=4&c.a[b]=5&d")),
                 is(expected));
+        assertThat(UNDER_TEST.readFrom(Map.class, Map.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedStringMap(), qs("")),
+                is((Map)Collections.singletonMap("e", "6")));
+        setQueryString(null);
         assertThat(UNDER_TEST.readFrom(Map.class, Map.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedStringMap(), qs("")),
                 is(Collections.EMPTY_MAP));
     }
@@ -126,6 +142,17 @@ public class HierarchicalMapFormUrlEncodedProviderTest {
     }
     protected static InputStream qs(final String str) {
         return new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8));
+    }
+    protected void setQueryString(final Map<String, String[]> map)
+            throws NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+        HttpServletRequest req = null;
+        if (map != null) {
+            req = mock(HttpServletRequest.class);
+            when(req.getParameterMap()).thenReturn(map);
+        }
+        Field f = UNDER_TEST.getClass().getDeclaredField("request");
+        f.setAccessible(true);
+        f.set(UNDER_TEST, req);
     }
     
 }

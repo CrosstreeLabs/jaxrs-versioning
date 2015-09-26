@@ -30,7 +30,7 @@ public @interface Version {
      * accepted.
      * @return The version number
      */
-    int value();
+    int version();
     /**
      * One or more content types that this value object represents. Must *not*
      * include version number or structure representation. For example:
@@ -42,5 +42,13 @@ public @interface Version {
      * there is no guarantee.
      * @return One or more content types
      */
-    String[] contentType();
+    String[] contentType() default {};
+    /**
+     * An optional list of zero or more domain models with which the value
+     * object is associated. If specified, allows methods to return the domain
+     * model and have it automatically converted to the corresponding value
+     * object.
+     * @return Zero or more domain model classes
+     */
+    Class<?>[] models() default {};
 }

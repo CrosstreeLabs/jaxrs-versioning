@@ -21,7 +21,13 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 public class GsonJsonMapper implements Mapper {
+    public static final String[] SUPPORTS = new String[]{"json"};
     private static final Gson GSON = new Gson();
+
+    @Override
+    public String[] supportedStructures() {
+        return SUPPORTS;
+    }
 
     @Override
     public <T> T convertValue(final Object from, final Class<T> to) {
@@ -34,13 +40,8 @@ public class GsonJsonMapper implements Mapper {
     }
 
     @Override
-    public String asString(final Object from) throws IOException {
-        return GSON.toJson(from);
-    }
-
-    @Override
     public byte[] asBytes(final Object from) throws IOException {
-        return asString(from).getBytes(StandardCharsets.UTF_8);
+        return GSON.toJson(from).getBytes(StandardCharsets.UTF_8);
     }
     
 }

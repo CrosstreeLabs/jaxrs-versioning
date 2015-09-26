@@ -15,6 +15,7 @@ package com.crosstreelabs.jaxrs.api.versioned;
 
 import com.crosstreelabs.jaxrs.api.versioned.annotation.Version;
 import com.crosstreelabs.jaxrs.api.versioned.util.AnnotationUtils;
+import com.crosstreelabs.jaxrs.api.versioned.util.MediaTypeUtils;
 import com.crosstreelabs.jaxrs.api.versioned.util.VersionUtils;
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,13 +90,15 @@ public abstract class AbstractValueObjectReaderWriter
             return false;
         }
         
+        MediaType contentType = MediaTypeUtils.normalize(mediaType);
+        
         // If the requested type is neither an interface nor abstract, and is
         // also versioned, then we check it's content types for compatibility
         // and return the appropriate response.
         if (!type.isInterface() && !Modifier.isAbstract(type.getModifiers())
                 && type.isAnnotationPresent(Version.class)) {
             Version version = type.getAnnotation(Version.class);
-            if (VersionUtils.isCompatible(mediaType, version)) {
+            if (VersionUtils.isCompatible(contentType, version)) {
                 return true;
             }
         }
@@ -103,7 +106,7 @@ public abstract class AbstractValueObjectReaderWriter
         // If the request type is an interface, is abstract, is not versioned,
         // or is otherwise incompatible according to above, we check the content
         // type itself.
-        Class<? extends ValueObject> cls = ValueObjectRegistry.findForMediaType(mediaType);
+        Class<? extends ValueObject> cls = ValueObjectRegistry.findForMediaType(contentType);
         if (cls == null || !type.isAssignableFrom(cls)) {
             throw new NotSupportedException();
         }
@@ -118,7 +121,8 @@ public abstract class AbstractValueObjectReaderWriter
             final MultivaluedMap<String, String> httpHeaders,
             final InputStream entityStream)
             throws IOException, WebApplicationException {
-        Class<? extends ValueObject> cls = ValueObjectRegistry.findForMediaType(mediaType);
+        MediaType contentType = MediaTypeUtils.normalize(mediaType);
+        Class<? extends ValueObject> cls = ValueObjectRegistry.findForMediaType(contentType);
         if (cls == null) {
             throw new NotSupportedException();
         }
@@ -174,6 +178,7 @@ public abstract class AbstractValueObjectReaderWriter
         if (!type.isAnnotationPresent(Version.class) || !(obj instanceof ValueObject)) {
             throw new InternalServerErrorException();
         }
+        MediaType contentType = MediaTypeUtils.normalize(mediaType);
         ValueObject vo = (ValueObject)obj;
         Version version = type.getAnnotation(Version.class);
         if (version.contentType().length == 0) {
@@ -182,12 +187,12 @@ public abstract class AbstractValueObjectReaderWriter
         if (requiresValidation(annotations)) {
             validate(vo);
         }
-        if (!VersionUtils.isCompatible(mediaType, version)) {
+        if (!VersionUtils.isCompatible(contentType, version)) {
             httpHeaders.putSingle("Content-Type", VersionUtils.defaultMediaType(version));
         } else {
-            httpHeaders.putSingle("Content-Type", mediaType.toString());
+            httpHeaders.putSingle("Content-Type", VersionUtils.normalize(contentType, version).toString());
         }
-        write(vo, annotations, mediaType, httpHeaders, entityStream);
+        write(vo, annotations, contentType, httpHeaders, entityStream);
     }
     
     //~ Internal helpers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

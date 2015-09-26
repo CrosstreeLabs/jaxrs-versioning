@@ -18,7 +18,7 @@ import com.crosstreelabs.jaxrs.api.versioned.annotation.Version;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.MediaType;
 
-@Version(value = 1, contentType = {UserV1.TYPE_STR})
+@Version(version = 1, contentType = {UserV1.TYPE_STR})
 public class UserV1 implements ValueObject {
     public static final String TYPE_STR = "application/vnd.crosstreelabs.user";
     public static final MediaType MEDIA_TYPE = MediaType.valueOf(TYPE_STR);

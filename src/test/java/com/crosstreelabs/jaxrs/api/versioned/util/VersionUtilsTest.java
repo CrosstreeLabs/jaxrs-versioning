@@ -34,7 +34,7 @@ public class VersionUtilsTest {
         
         assertThat(isCompatible(t("application/vnd.crosstreelabs.user"), version), is(true));
         assertThat(isCompatible(t("application/vnd.crosstreelabs.user;v=1"), version), is(true));
-        assertThat(isCompatible(t("application/vnd.crosstreelabs.user+json;v=1"), version), is(true));
+        assertThat(isCompatible(t("application/vnd.crosstreelabs.user+json;v=1;q=1000"), version), is(true));
         assertThat(isCompatible(t("application/vnd.crosstreelabs.user+xml;v=1"), version), is(true));
         assertThat(isCompatible(t("application/vnd.crosstreelabs.user;v=2"), version), is(false));
         assertThat(isCompatible(t("application/vnd.crosstreelabs.user+json;v=2"), version), is(false));
@@ -58,7 +58,7 @@ public class VersionUtilsTest {
     }
     protected Version v(final int version, final String[] contentTypes) {
         Version v = mock(Version.class);
-        when(v.value()).thenReturn(version);
+        when(v.version()).thenReturn(version);
         when(v.contentType()).thenReturn(contentTypes);
         return v;
     }

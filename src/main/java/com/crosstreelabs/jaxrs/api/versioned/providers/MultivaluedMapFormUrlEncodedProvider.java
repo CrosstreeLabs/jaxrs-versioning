@@ -41,13 +41,11 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.Provider;
 
 /**
  * This provider is pilfered largely from
  * https://github.com/resteasy/Resteasy/blob/master/jaxrs/resteasy-jaxrs/src/main/java/org/jboss/resteasy/plugins/providers/FormUrlEncodedProvider.java
  */
-@Provider
 @Produces("application/x-www-form-urlencoded")
 @Consumes("application/x-www-form-urlencoded")
 public class MultivaluedMapFormUrlEncodedProvider
@@ -80,14 +78,11 @@ public class MultivaluedMapFormUrlEncodedProvider
         // Query string params
         if (request != null) {
             Map<String, String[]> tmp = request.getParameterMap();
-            Collection<String> coll = new ArrayList<>();
             for (String key : tmp.keySet()) {
                 for (String value : tmp.get(key)) {
-                    coll.add(key+"="+value);
+                    result.add(key, value);
                 }
             }
-            String tmpStr = StringUtils.join(coll,"&");
-            result.putAll(QueryStringUtils.toMap(tmpStr));
         }
         
         // Decode if required

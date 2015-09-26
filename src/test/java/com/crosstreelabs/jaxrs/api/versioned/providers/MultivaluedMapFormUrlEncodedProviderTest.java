@@ -18,11 +18,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -32,10 +34,10 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.*;
+import org.junit.After;
 import static org.junit.Assert.assertThat;
 import org.junit.Test;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 public class MultivaluedMapFormUrlEncodedProviderTest {
     protected static final MultivaluedMapFormUrlEncodedProvider UNDER_TEST
@@ -48,6 +50,11 @@ public class MultivaluedMapFormUrlEncodedProviderTest {
         ENCODED = new Annotation[]{
                 e
         };
+    }
+    
+    @After
+    public void after() throws Exception {
+        setQueryString(null);
     }
     
     @Test
@@ -69,9 +76,18 @@ public class MultivaluedMapFormUrlEncodedProviderTest {
         expected.addAll("b", "2", "3", "4");
         expected.add("c", "5");
         expected.add("d", "");
+        expected.add("e", "6");
+        MultivaluedMap expected2 = new MultivaluedHashMap();
+        expected2.add("e", "6");
+        setQueryString(new HashMap<String, String[]>(){{
+            put("e", new String[]{"6"});
+        }});
         
         assertThat(UNDER_TEST.readFrom(MultivaluedMap.class, MultivaluedMap.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedStringMap(), qs("a=1&b=2&b=3&b=4&c=5&d")),
                 is(expected));
+        assertThat(UNDER_TEST.readFrom(MultivaluedMap.class, MultivaluedMap.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedStringMap(), qs("")),
+                is(expected2));
+        setQueryString(null);
         assertThat(UNDER_TEST.readFrom(MultivaluedMap.class, MultivaluedMap.class, EMPTY_ANNOTATIONS, MediaType.APPLICATION_FORM_URLENCODED_TYPE, new MultivaluedStringMap(), qs("")),
                 is(Collections.EMPTY_MAP));
     }
@@ -132,5 +148,16 @@ public class MultivaluedMapFormUrlEncodedProviderTest {
     }
     protected static InputStream qs(final String str) {
         return new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8));
+    }
+    protected void setQueryString(final Map<String, String[]> map)
+            throws NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+        HttpServletRequest req = null;
+        if (map != null) {
+            req = mock(HttpServletRequest.class);
+            when(req.getParameterMap()).thenReturn(map);
+        }
+        Field f = UNDER_TEST.getClass().getDeclaredField("request");
+        f.setAccessible(true);
+        f.set(UNDER_TEST, req);
     }
 }
