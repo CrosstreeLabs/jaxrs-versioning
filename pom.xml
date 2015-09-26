@@ -9,7 +9,7 @@
     </parent>
     
     <artifactId>jaxrs.api.versioned</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
     <name>JAXRS Versioned API</name>
     <description>A library that helps produce versioned APIs.</description>
@@ -27,7 +27,7 @@
         <connection>scm:git:git@github.com:crosstreelabs/jaxrs-versioning.git</connection>
         <developerConnection>scm:git:git@github.com:crosstreelabs/jaxrs-versioning.git</developerConnection>
         <url>git@github.com:crosstreelabs/jaxrs-versioning.git</url>
-        <tag>HEAD</tag>
+        <tag>jaxrs.api.versioned-0.1.0</tag>
     </scm>
     
     <developers>
