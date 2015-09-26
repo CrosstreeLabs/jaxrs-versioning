@@ -13,6 +13,31 @@
     <packaging>jar</packaging>
     <name>JAXRS Versioned API</name>
     <description>A library that helps produce versioned APIs.</description>
+    <url>http://jaxrs-versioning.crosstreelabs.com</url>
+    
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com:crosstreelabs/jaxrs-versioning.git</connection>
+        <developerConnection>scm:git:git@github.com:crosstreelabs/jaxrs-versioning.git</developerConnection>
+        <url>git@github.com:crosstreelabs/jaxrs-versioning.git</url>
+        <tag>HEAD</tag>
+    </scm>
+    
+    <developers>
+        <developer>
+            <name>Thomas Wilson</name>
+            <email>thomas.wilson@crosstreelabs.com</email>
+            <organization>Crosstree Labs</organization>
+            <organizationUrl>http://www.crosstreelabs.com</organizationUrl>
+        </developer>
+    </developers>
     
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -145,6 +170,5 @@
             <version>3.0.11.Final</version>
             <scope>test</scope>
         </dependency>
-        
     </dependencies>
 </project>
