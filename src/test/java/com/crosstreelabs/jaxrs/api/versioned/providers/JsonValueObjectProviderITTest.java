@@ -70,7 +70,7 @@ public class JsonValueObjectProviderITTest {
     @Test
     public void ensureGetConversionWorks() {
         Response r = jersey.getClient().target("/abc")
-                .request("application/vnd.crosstreelabs.user+json")
+                .request("application/vnd.crosstreelabs.user+json;v=1")
                 .get();
         assertThat(r.getStatus(), is(200));
         assertThat(r.getHeaderString("Content-Type"), startsWith("application/vnd.crosstreelabs.user+json;v=1"));
