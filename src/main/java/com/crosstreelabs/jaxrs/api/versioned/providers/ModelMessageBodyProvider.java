@@ -75,17 +75,17 @@ public class ModelMessageBodyProvider implements MessageBodyWriter<Object> {
             return;
         } catch (IllegalAccessException | IllegalArgumentException
                 | InstantiationException | InvocationTargetException
-                | NoSuchMethodException ex) {
+                | NoSuchMethodException | SecurityException ex) {
+            LOGGER.warn(ex.getClass().getName()+": "+ex.getMessage());
             LOGGER.debug("", ex);
-        } catch (SecurityException ex) {
-            LOGGER.warn("", ex);
         }
         
         // Otherwise, we'll try to map it
         try {
             entityStream.write(mapper.asBytes(mapper.convertValue(t, vo)));
         } catch (Exception ex) {
-            LOGGER.warn("", ex);
+            LOGGER.warn(ex.getClass().getName()+": "+ex.getMessage());
+            LOGGER.debug("", ex);
             throw ex;
         }
     }
